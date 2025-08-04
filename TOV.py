@@ -10,8 +10,6 @@ from scipy.integrate import solve_ivp
 from scipy.integrate import cumulative_trapezoid as integcum
 from scipy.integrate import trapezoid as integ
 import os
-# import mplhep as hep
-# hep.style.use("ATLAS")
 import csv
 
 #constants
@@ -290,93 +288,4 @@ class TOV():
         if self.dilaton_active == True:
             self.initPhi /= self.phi_inf
             self.Compute()
-
-    def find_dilaton_center(self):
-        initDensity = self.initDensity
-        dependence = self.dependence
-        option = self.option
-        precision = 1e-5#8
-        retro = self.retro
-        log_active = self.log_active
-        dilaton_active = self.dilaton_active
-        EQS_type = self.option
-        radiusMax_out = self.radiusMax_out
-        radiusMax_in = self.radiusMax_in
-        Npoint = self.Npoint
-        initPsi = 0
-        radiusInit = 0.000001
-        dilaton = True
-        #Find limits of potential Phi_0
-        Phi0_min, Phi0_max = 0.5, 1.5 # initial limits
-        tov_min = TOV(initDensity, initPsi, Phi0_min, radiusMax_in, radiusMax_out, Npoint, EQS_type, dilaton_active, log_active, retro, dependence)
-        tov_min.Compute()
-        Phi_inf_min = tov_min.Phi[-1]
-        while Phi_inf_min > 1:
-            Phi0_min -= 0.1
-            if Phi0_min == 0:
-                Phi0_min = 1e-2
-                 #print(f'Had to put l.h.s. limit of $\Phi_0$ to {Phi0_min}')
-            tov_min = TOV(initDensity, initPsi, Phi0_min, radiusMax_in, radiusMax_out, Npoint, EQS_type, dilaton_active, log_active, retro, dependence)
-            tov_min.Compute()
-            Phi_inf_min = tov_min.Phi[-1]
-             #print(f'Had to lower down the l.h.s.limit of $\Phi_0$ to {Phi0_min:.1f}')
-        tov_max = TOV(initDensity, initPsi, Phi0_max, radiusMax_in, radiusMax_out, Npoint, EQS_type, dilaton_active, log_active, retro, dependence)
-        tov_max.Compute()
-        Phi_inf_max = tov_max.Phi[-1]
-        while Phi_inf_max <1:
-            Phi0_max += 0.1
-            tov_max = TOV(initDensity, initPsi, Phi0_max, radiusMax_in, radiusMax_out, Npoint, EQS_type, dilaton_active, log_active, retro, dependence)
-            tov_max.Compute()
-            Phi_inf_max = tov_max.Phi[-1]
-             #print(f'Had to increase the r.h.s. limit of $\Phi_0$ to {Phi0_max:.1f}')
-        #Search for Phi_0 that leads to Phi_inf = 1 to a given precision by dichotomy
-        step_precision = 1
-        Phi0_dicho = np.array([Phi0_min, (Phi0_min + Phi0_max) / 2, Phi0_max])
-        Phi_inf_dicho = np.zeros(3)
-        while step_precision > precision:
-            for n in range(3):
-                tov = TOV(initDensity, initPsi, Phi0_dicho[n], radiusMax_in, radiusMax_out, Npoint, EQS_type, dilaton_active, log_active, retro, dependence)
-                tov.Compute()
-                Phi_inf_dicho[n] = tov.Phi[-1]
-            N = np.min(np.argwhere(Phi_inf_dicho>1))
-            Phi0_min = Phi0_dicho[N-1]
-            Phi0_max = Phi0_dicho[N]
-            Phi0_dicho = [Phi0_min, (Phi0_min + Phi0_max) / 2, Phi0_max]
-            step_precision = np.abs(Phi_inf_dicho[N] - Phi_inf_dicho[N-1])
-            Phi = (Phi0_min + Phi0_max) / 2
-        return Phi, (Phi0_min + Phi0_max) / 2, (Phi0_min - Phi0_max) / 2, (Phi_inf_dicho[N] + Phi_inf_dicho[N-1]) / 2
-
-def save_var_latex(key, value):
-    dict_var = {}
-    file_path = os.path.join(os.getcwd(), "NS_data.dat")
-    dict_var[key] = value
-    with open(file_path, "a") as f:
-        for key in dict_var.keys():
-            f.write(f"{key},{dict_var[key]}\n")
-
-def save_var_latex_dependence(key, value):
-    dict_var = {}
-    file_path = os.path.join(os.getcwd(), "NS_hbar_dependency_data.dat")
-    dict_var[key] = value
-    with open(file_path, "a") as f:
-        for key in dict_var.keys():
-            f.write(f"{key},{dict_var[key]}\n")
-
-def verify():
-    if os.path.exists('./NS_data.dat'):
-        os.remove('./NS_data.dat')
-    if os.path.exists('./NS_hbar_dependency_data.dat'):
-        os.remove('./NS_hbar_dependency_data.dat')
-
-def verify_files(matrices):
-    missing_file = [files for files in matrices if not os.path.exists(files)]
-
-    if missing_file:
-        print("Following files are missing :\n")
-        for fichier in missing_file:
-            print(f"- {fichier}")
-        return False  # if one files is missing
-    else:
-        print("All files are present.\n")
-        return True  # Each files exists
 
