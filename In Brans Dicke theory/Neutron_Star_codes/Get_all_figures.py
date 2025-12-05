@@ -58,18 +58,12 @@ def run(rho_cen, w):
     ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * (1/(2 * np.sqrt(3+2*w))))/( D + np.sign(gamma)* np.sqrt(1-D**2) * (1/(2 * np.sqrt(3+2*w))))
     theta_inf = ((w+1-ge * ( w+2))/(ge*w+ge-w-2))
     ge_theta = tov.Ge_theta
-
-    # print('gamma', gamma)
-    print('ge', ge)
-    print('ge_theta =', ge_theta)
-    # print('theta inféré', ((w+1-ge * ( w+2))/(ge*w+ge-w-2)))
-    # print('écart pourcent theta', ge_theta -  , '\n')
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
 ###
     return (b_, D, rho_cen, gamma, g_bd, ge, SoS_c_max)
 
 
-run(100, 1e5)
+# run(100, 2)
 # run(6800, 2)
 
 
@@ -170,7 +164,7 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         gamma_edd_all = np.array(gamma_edd_all)
         gamma_BD_all = np.array(gamma_BD_all)
 
-        # Second plot 1-gamma_e
+        # 1-gamma_e
         plt.figure(figsize=(8,6))
         mesh = plt.pcolormesh(den_space, w_values, 1-gamma_edd_all, shading='auto', cmap='viridis')
         cbar = plt.colorbar(mesh)
@@ -183,12 +177,11 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.xlim(min(den_space),max(den_space))
         plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_exact_m_{n}.png', dpi=200, bbox_inches="tight")
 
-
-        # plot gamma_e-gamma_BD
+        # gamma_e-gamma_BD
         plt.figure(figsize=(8,6))
         mesh = plt.pcolormesh(den_space, w_values, gamma_edd_all-gamma_BD_all, shading='auto', cmap='viridis')
         cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e-\gamma_BD$')
+        cbar.set_label(r'$\gamma_e - \gamma_{BD}$')
         # cbar.ax.set_yscale("log")
         plt.yscale("log")
         plt.ylim(np.exp(lowest_w), np.exp(highest_w))
@@ -197,11 +190,11 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_e-gamma_BD_{n}.png', dpi=200, bbox_inches="tight")
 
-        # plot gamma_e-gamma_BD/1-gb
+        # gamma_e-gamma_BD/1-g_BD
         plt.figure(figsize=(8,6))
-        mesh = plt.pcolormesh(den_space, w_values, (gamma_edd_all-gamma_BD_all)/(1-gamma_BD_all), shading='auto', cmap='viridis')
+        mesh = plt.pcolormesh(den_space, w_values, ((gamma_edd_all-gamma_BD_all)/(1-gamma_BD_all) ) * 100, shading='auto', cmap='viridis')
         cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e-\gamma_B/(1-gamma_B)$')
+        cbar.set_label(r'$(\gamma_e-\gamma_{BD})/(1-\gamma_{BD})\%$')
         # cbar.ax.set_yscale("log")
         plt.yscale("log")
         plt.ylim(np.exp(lowest_w), np.exp(highest_w))
@@ -209,21 +202,6 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb_{n}.png', dpi=200, bbox_inches="tight")
-
-
-        # plot gamma_e-gamma_BD/1-gb en log
-        plt.figure(figsize=(8,6))
-        mesh = plt.pcolormesh(den_space, w_values, (gamma_edd_all-gamma_BD_all)/(1-gamma_BD_all), shading='auto', cmap='viridis')
-        cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e-\gamma_B/(1-gamma_B)$')
-        cbar.ax.set_yscale("log")
-        plt.yscale("log")
-        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
-        plt.xlim(min(den_space),max(den_space))
-        plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
-        plt.ylabel(r'$\omega$')
-        plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb__log{n}.png', dpi=200, bbox_inches="tight")
-
 
     else:
 
@@ -251,11 +229,11 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_exact_m_{n}.png', dpi=200, bbox_inches="tight")
 
-        # sixth plot gamma_e/-gamma_BD
+        # gamma_e-gamma_BD
         plt.figure(figsize=(8,6))
         mesh = plt.pcolormesh(den_space, w_values, gamma_edd_all-gamma_BD_all, shading='auto', cmap='viridis')
         cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e-\gamma_BD$')
+        cbar.set_label(r'$\gamma_e - \gamma_{BD}$')
         # cbar.ax.set_yscale("log")
         plt.yscale("log")
         plt.ylim(np.exp(lowest_w), np.exp(highest_w))
@@ -265,11 +243,11 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_e-gamma_BD_{n}.png', dpi=200, bbox_inches="tight")
 
 
-        # seventh plot gamma_e-gamma_BD/(1-gb)
+        # gamma_e-gamma_BD/1-g_BD
         plt.figure(figsize=(8,6))
-        mesh = plt.pcolormesh(den_space, w_values, (gamma_edd_all-gamma_BD_all)/(1-gamma_BD_all), shading='auto', cmap='viridis')
+        mesh = plt.pcolormesh(den_space, w_values, ((gamma_edd_all-gamma_BD_all)/(1-gamma_BD_all) ) * 100, shading='auto', cmap='viridis')
         cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e-\gamma_B/(1-gamma_B)$')
+        cbar.set_label(r'$(\gamma_e-\gamma_{BD})/(1-\gamma_{BD})\%$')
         # cbar.ax.set_yscale("log")
         plt.yscale("log")
         plt.ylim(np.exp(lowest_w), np.exp(highest_w))
@@ -277,21 +255,6 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb_{n}.png', dpi=200, bbox_inches="tight")
-
-
-        # eigth plot gamma_e-gamma_BD/(1-gb) avec log
-        plt.figure(figsize=(8,6))
-        mesh = plt.pcolormesh(den_space, w_values, (gamma_edd_all-gamma_BD_all)/(1-gamma_BD_all), shading='auto', cmap='viridis')
-        cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e-\gamma_B/(1-gamma_B)$')
-        cbar.ax.set_yscale("log")
-        plt.yscale("log")
-        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
-        plt.xlim(min(den_space),max(den_space))
-        plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
-        plt.ylabel(r'$\omega$')
-        plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb__log{n}.png', dpi=200, bbox_inches="tight")
-
 
 
 def recover_and_plot(n, lowest_w, highest_w):
@@ -323,97 +286,5 @@ def recover_and_plot(n, lowest_w, highest_w):
 # recover_and_plot(n=20, lowest_w = np.log(20000),highest_w = np.log(60000))
 
 #100 itération a 10e-5 de précision conduit a 58h a peu prés.
-# recover_and_plot(n=100, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
+recover_and_plot(n=150, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
 
-
-
-
-
-
-
-
-########
-
-def test():
-    rhoInit = 100#*cst.eV*10**6/(cst.c**2*cst.fermi**3)
-    w_values = np.linspace(np.log(1e-1), np.log(1e5), 30)
-    w_values = np.exp(w_values)
-    Ge = []
-    Gb = []
-    Gdiv =[]
-    for w in w_values:
-        b_,D , rho_cen, gamma, gamma_BD, gamma_edd, vsurc = run(rhoInit,w)
-        # ge = (1 - gamma**2 - 2 * gamma * b_)/(1 - gamma**2 + 2 * gamma * b_)
-        Ge.append(1-gamma_edd)
-        Gb.append(1-gamma_BD)
-        Gdiv.append(dev)
-        # print('1-ge', 1-gamma_edd)
-        # print('1-gb', 1-gamma_BD)
-        # print('div', (1-gamma_edd)/(1-gamma_BD), '\n')
-
-    # plt.figure()
-    # plt.plot(Ge, w_values, marker = 'x')
-    # plt.xlabel('1-gammae')
-    # plt.yscale("log")
-    # plt.show()
-    # plt.close()
-    # plt.figure()
-    # plt.plot(Gb, w_values, marker = 'x')
-    # plt.xlabel('1-gammaPN')
-    # plt.yscale("log")
-    # plt.show()
-    # plt.close()
-    # plt.figure()
-    # plt.plot(Gdiv, w_values, marker = 'x')
-    # plt.xlabel('gammae-gammaPN')
-    # plt.yscale("log")
-    # plt.show()
-
-# test()
-#######
-
-
-#######
-
-
-def test_densite():
-
-    rhoInit = np.linspace(100,1200, 15)#*cst.eV*10**6/(cst.c**2*cst.fermi**3)
-    w = 2
-    Ge = []
-    Gb = []
-    Gdiv =[]
-    Theta = []
-    Gdiff = []
-    for rho in rhoInit:
-        b_,D , rho_cen, gamma, gamma_BD, gamma_edd, vsurc = run(rho,w)
-    #
-    #     diff = gamma_BD - gamma_edd
-    #     Ge.append(gamma_edd)
-    #     Gb.append(gamma_BD)
-    #     Gdiff.append(diff)
-    #     Theta.append(((w+1-gamma_edd * ( w+2))/(gamma_edd*w+gamma_edd-w-2)))
-    #     # print('theta inféré', ((w+1-gamma_edd * ( w+2))/(gamma_edd*w+gamma_edd-w-2)), '\n')
-    #
-    #
-    # plt.figure()
-    # plt.plot(rhoInit, Ge, marker = 'x')
-    # plt.ylabel('1-gammae')
-    # # plt.yscale("log")
-    # plt.show()
-    # plt.close()
-    # plt.figure()
-    # plt.plot(rhoInit, Gb, marker = 'x')
-    # plt.ylabel('1-gammaPN')
-    # # # plt.yscale("log")
-    # plt.show()
-    # plt.close()
-    # plt.figure()
-    # plt.plot(Theta, Gdiff)
-    # plt.show()
-    # plt.close()
-# test_densite()
-# # test()
-
-
-#######

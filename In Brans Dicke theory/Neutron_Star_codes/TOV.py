@@ -268,7 +268,7 @@ class TOV():
     def find_dilaton_center(self):
         w = self.w
         initDensity = self.initDensity
-        precision = 1e-3#8
+        precision = 1e-2#8
         log_active = self.log_active
         radiusMax_out = self.radiusMax_out
         radiusMax_in = self.radiusMax_in
