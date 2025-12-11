@@ -256,19 +256,17 @@ class TOV():
         else:
             print('Pressure=0 not reached')
 
+    def ComputeTOV_normalization(self):
 
-    def ComputeTOV(self):
-        """
-        ComputeTOV is the function to consider in order to compute "physical" quantities. It takes into account phi_inf->1 r->ininity
-        """
         self.Compute()
-
-
+        self.initPhi = self.initPhi/self.phi_inf
+        self.Compute()
+        print('phi inf', self.phi_inf)
 
     def find_dilaton_center(self):
         w = self.w
         initDensity = self.initDensity
-        precision = 1e-2#8
+        precision = 1e-4#8
         log_active = self.log_active
         radiusMax_out = self.radiusMax_out
         radiusMax_in = self.radiusMax_in

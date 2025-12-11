@@ -29,9 +29,7 @@ def run(rho_cen, w):
     log_active = False
     rhoInit = rho_cen*cst.eV*10**6/(cst.c**2*cst.fermi**3)
     tov = TOV(rhoInit , PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, log_active, w)
-    PhiInit = tov.find_dilaton_center()[0]
-    tov = TOV(rhoInit , PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, log_active, w)
-    tov.ComputeTOV()
+    tov.ComputeTOV_normalization()
     r = tov.radius
     a = tov.g_tt
     b = tov.g_rr
@@ -280,11 +278,5 @@ def recover_and_plot(n, lowest_w, highest_w):
         count=0
         plot_w_vs_rho(lowest_w, highest_w, n, count)
 
-
-
-
-# recover_and_plot(n=20, lowest_w = np.log(20000),highest_w = np.log(60000))
-
-#100 itération a 10e-5 de précision conduit a 58h a peu prés.
 recover_and_plot(n=150, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
 
