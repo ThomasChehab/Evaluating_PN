@@ -58,21 +58,7 @@ def run(rho_cen, w):
     ge_theta = tov.Ge_theta
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
 ###
-    return (b_, D, rho_cen, gamma, g_bd, ge, SoS_c_max)
-
-
-# run(100, 2)
-# run(6800, 2)
-
-
-
-
-
-
-
-
-
-
+    return (b_, D, rho_cen, gamma, g_bd, ge_theta, SoS_c_max)
 
 ###################################################
 def compute_gamma(n,w):

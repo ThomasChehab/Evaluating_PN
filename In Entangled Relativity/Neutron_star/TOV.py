@@ -262,68 +262,8 @@ class TOV():
         ComputeTOV is the function to consider in order to compute "physical" quantities. It takes into account phi_inf->1 r->ininity
         """
         self.Compute()
-        # if self.dilaton_active:
-        #     self.initPhi = self.initPhi/self.phi_inf
-        #     self.Compute()
-
-
-    def find_dilaton_center(self):
-        initDensity = self.initDensity
-        # dependence = self.dependence
-        precision = 1e-5#5
-        # retro = self.retro
-        log_active = self.log_active
-        dilaton_active = self.dilaton_active
-        radiusMax_out = self.radiusMax_out
-        radiusMax_in = self.radiusMax_in
-        Npoint = self.Npoint
-        initPsi = 0
-        radiusInit = 0.000001
-        dilaton = True
-        #Find limits of potential Phi_0
-        Phi0_min, Phi0_max = 0.5, 1.5 # initial limits
-        tov_min = TOV(initDensity, initPsi, Phi0_min, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-        tov_min.Compute()
-        Phi_inf_min = tov_min.Phi[-1]
-        while Phi_inf_min > 1:
-            Phi0_min -= 0.1
-            if Phi0_min == 0:
-                Phi0_min = 1e-2
-                 #print(f'Had to put l.h.s. limit of $\Phi_0$ to {Phi0_min}')
-            tov_min = TOV(initDensity, initPsi, Phi0_min, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-            tov_min.Compute()
-            Phi_inf_min = tov_min.Phi[-1]
-             #print(f'Had to lower down the l.h.s.limit of $\Phi_0$ to {Phi0_min:.1f}')
-        tov_max = TOV(initDensity, initPsi, Phi0_max, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-        tov_max.Compute()
-        Phi_inf_max = tov_max.Phi[-1]
-        while Phi_inf_max <1:
-            Phi0_max += 0.1
-            tov_max = TOV(initDensity, initPsi, Phi0_max, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-            tov_max.Compute()
-            Phi_inf_max = tov_max.Phi[-1]
-             #print(f'Had to increase the r.h.s. limit of $\Phi_0$ to {Phi0_max:.1f}')
-        #Search for Phi_0 that leads to Phi_inf = 1 to a given precision by dichotomy
-        step_precision = 1
-        Phi0_dicho = np.array([Phi0_min, (Phi0_min + Phi0_max) / 2, Phi0_max])
-        Phi_inf_dicho = np.zeros(3)
-        while step_precision > precision:
-            for n in range(3):
-                tov = TOV(initDensity, initPsi, Phi0_dicho[n], radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-                tov.Compute()
-                Phi_inf_dicho[n] = tov.Phi[-1]
-            N = np.min(np.argwhere(Phi_inf_dicho>1))
-            Phi0_min = Phi0_dicho[N-1]
-            Phi0_max = Phi0_dicho[N]
-            Phi0_dicho = [Phi0_min, (Phi0_min + Phi0_max) / 2, Phi0_max]
-            step_precision = np.abs(Phi_inf_dicho[N] - Phi_inf_dicho[N-1])
-            Phi = (Phi0_min + Phi0_max) / 2
-        return Phi, (Phi0_min + Phi0_max) / 2, (Phi0_min - Phi0_max) / 2, (Phi_inf_dicho[N] + Phi_inf_dicho[N-1]) / 2
-
-
-
-# gamma_theta 1.0322083693015227
-# ge = 1.0312885209282394
+        self.initPhi = self.initPhi/self.phi_inf
+        self.Compute()
 
 
 

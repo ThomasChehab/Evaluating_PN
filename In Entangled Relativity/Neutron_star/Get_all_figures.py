@@ -28,8 +28,6 @@ def run(rho_cen):
     dilaton_active = True
     rhoInit = rho_cen*cst.eV*10**6/(cst.c**2*cst.fermi**3)
     tov = TOV(rhoInit, PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-    PhiInit = tov.find_dilaton_center()[0]
-    tov = TOV(rhoInit, PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
     tov.ComputeTOV()
     r = tov.radius
     a = tov.g_tt
@@ -56,14 +54,12 @@ def run(rho_cen):
     descr = 'rho'
     D = (1-gamma**2)/(1+gamma**2)
     ge = ((D - np.sign(gamma) * 2/np.sqrt(3) * np.sqrt(1-D**2)/2))/((D +  np.sign(gamma) * 2/np.sqrt(3) * np.sqrt(1-D**2)/2))
-    print('ge =', ge)
+    # print('ge =', ge)
     ge_theta = tov.Ge_theta
-    print('ge_theta =', ge_theta)
-
+    # print('ge_theta =', ge_theta)
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
 
-
-    return (b_, D, rho_cen, gamma, ge, SoS_c_max)
+    return (b_, D, rho_cen, gamma, ge_theta, SoS_c_max)
 
 # run(1500)
 
@@ -122,7 +118,7 @@ def make_gamma_beta_plots(n):
     ax.set_ylabel('$1-\\gamma_e$', fontsize=18)#, color = 'tab:blue')
 
     fig.legend( bbox_to_anchor=(0.9, 0.6))
-    plt.savefig(f'./evaluating_gamma_with_alpha.png', dpi = 200,bbox_inches='tight')
+    plt.savefig(f'./evaluating_gamma_exact_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
 
@@ -157,4 +153,4 @@ def make_gamma_beta_plots(n):
     # # plt.savefig(f'figures/alpha_beta_{nspace}_{descr}.png', dpi = 200,bbox_inches='tight')
     # plt.show()
 
-make_gamma_beta_plots(20)
+make_gamma_beta_plots(150)
