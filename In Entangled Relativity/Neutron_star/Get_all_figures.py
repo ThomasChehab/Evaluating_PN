@@ -126,7 +126,7 @@ def make_gamma_beta_plots(n):
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
     ax.plot(den_space,(1-delta_edd_a) *100, label=f'$1-\\delta_e$ ({comment})', color = 'tab:blue')
-    ax.set_ylabel('$1-\\delta_e$', fontsize=18)#, color = 'tab:blue')
+    ax.set_ylabel('$1-\\delta_e\%$', fontsize=18)#, color = 'tab:blue')
     fig.legend( bbox_to_anchor=(0.9, 0.6))
     plt.savefig(f'./evaluating_delta_percent_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
