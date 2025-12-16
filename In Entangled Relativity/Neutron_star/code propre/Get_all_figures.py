@@ -59,12 +59,7 @@ def run(rho_cen):
     # print('ge_theta =', ge_theta)
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
 
-    delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3)))**(-2) )
-
-    delta_theta = tov.Delta_theta
-    print('écart pourcent delta', (delta - delta_theta)/delta_theta * 100, '\n')
-
-    return (b_, D, rho_cen, gamma, ge_theta, delta_theta, SoS_c_max)
+    return (b_, D, rho_cen, gamma, ge_theta, SoS_c_max)
 
 # run(1500)
 
@@ -73,64 +68,99 @@ def make_gamma_beta_plots(n):
 
     den_space = np.linspace(100,2000,num=n)
     beta_vec = np.array([])
+    # delta_PN_vec = np.array([])
+
+
     vsurc_a = np.array([])
     gamma_edd_a = np.array([])
-    delta_edd_a = np.array([])
-
+    gamma_edd_a_m = np.array([])
+    # delta_PN = np.array([])
+#
 
     for den in den_space:
-        b_, D, rho_cen, gamma, ge, de, vsurc  = run(den)
-
+        b_, D, rho_cen, gamma, ge, vsurc  = run(den)
+#
         vsurc_a = np.append(vsurc_a,vsurc )
+#
+#
         gamma_edd_a = np.append(gamma_edd_a,ge )
-        delta_edd_a = np.append(delta_edd_a,de )
+#
+        # delta = 4/3 * (( 1 - gamma**2 - 4 * gamma * xi)**2 - (1/4) * (1 + gamma**2)**2 ) * 1/(1 - gamma**2 + 4 * gamma * xi)**2
+        # delta_PN = np.append(delta_PN,delta)
+
 
     index_max = np.where(vsurc_a > 1/np.sqrt(3))[0][0]
     den_space = den_space[0:index_max]
     # print('densité max', den_space[-1])
     gamma_edd_a = gamma_edd_a[0:index_max]
-    delta_edd_a = delta_edd_a[0:index_max]
-
     # comment = '$L_m = -\\epsilon$'#-\\rho$'
     comment = '$L_m = -\\rho$'
 
+    # delta_a = delta_PN[0:index_max]
+
+
+    # fig,ax = plt.subplots()
+    # plt.xlabel('Central density ($MeV/fm^3$)')
+    # ax.plot(den_space,gamma_vec, label=f'$\\alpha$ ({comment})', color = 'tab:blue')
+    # ax.set_ylabel('$\\alpha$', fontsize=12, color = 'tab:blue')
+    #
+    # ax2=ax.twinx()
+    # ax2.plot(den_space,beta_vec, label=f'$\\beta$ ({comment})', color = 'tab:green', linestyle = 'dashed')
+    # ax2.set_ylabel('$\\beta$', fontsize=12, color = 'tab:green')
+    #
+    # fig.legend( bbox_to_anchor=(0.9, 0.7))
+    # # plt.savefig(f'figures/alpha_beta_{nspace}_{descr}.png', dpi = 200,bbox_inches='tight')
+    # plt.show()
 
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
     ax.plot(den_space,(1-gamma_edd_a) * 100, label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
     ax.set_ylabel('$1-\\gamma_e\%$', fontsize=18)#, color = 'tab:blue')
+
     fig.legend( bbox_to_anchor=(0.9, 0.6))
     plt.savefig(f'./evaluating_gamma_exact_m_percent.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
-    #
-    # fig,ax = plt.subplots()
-    # plt.xlabel('Central density ($MeV/fm^3$)')
-    # ax.plot(den_space,1-gamma_edd_a, label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
-    # ax.set_ylabel('$1-\\gamma_e$', fontsize=18)#, color = 'tab:blue')
-    # fig.legend( bbox_to_anchor=(0.9, 0.6))
-    # plt.savefig(f'./evaluating_gamma_exact_m.png', dpi = 200,bbox_inches='tight')
-    # # plt.show()
-    # plt.close()
 
-    # fig,ax = plt.subplots()
-    # plt.xlabel('Central density ($MeV/fm^3$)')
-    # ax.plot(den_space,gamma_edd_a, label=f'$\\gamma_e$ ({comment})', color = 'tab:blue')
-    # ax.set_ylabel('$\\gamma_e $', fontsize=18)#, color = 'tab:blue')
-    # fig.legend( bbox_to_anchor=(0.9, 0.6))
-    # plt.savefig(f'./evaluating_gamma_exact.png', dpi = 200,bbox_inches='tight')
-    # # plt.show()
-    # plt.close()
-
-    # Plot de delta :
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
-    ax.plot(den_space,(1-delta_edd_a) *100, label=f'$1-\\delta_e$ ({comment})', color = 'tab:blue')
-    ax.set_ylabel('$1-\\delta_e$', fontsize=18)#, color = 'tab:blue')
+    ax.plot(den_space,1-gamma_edd_a, label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$1-\\gamma_e$', fontsize=18)#, color = 'tab:blue')
+
     fig.legend( bbox_to_anchor=(0.9, 0.6))
-    plt.savefig(f'./evaluating_delta_percent_m.png', dpi = 200,bbox_inches='tight')
+    plt.savefig(f'./evaluating_gamma_exact_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
 
+    fig,ax = plt.subplots()
+    plt.xlabel('Central density ($MeV/fm^3$)')
+    ax.plot(den_space,gamma_edd_a, label=f'$\\gamma_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$\\gamma_e $', fontsize=18)#, color = 'tab:blue')
+    fig.legend( bbox_to_anchor=(0.9, 0.6))
+    plt.savefig(f'./evaluating_gamma_exact.png', dpi = 200,bbox_inches='tight')
+    # plt.show()
+    plt.close()
+
+    # Plot de delta :
+    # fig,ax = plt.subplots()
+    # plt.xlabel('Central density ($MeV/fm^3$)')
+    # ax.plot(den_space,delta_a-1, label=f'$\\delta_e -1$ ({comment})', color = 'tab:blue')
+    # ax.set_ylabel('$\\delta_e-1$', fontsize=18)#, color = 'tab:blue')
+    #
+    # fig.legend( bbox_to_anchor=(0.9, 0.6))
+    # plt.savefig(f'./evaluating_delta_with_alpha.png', dpi = 200,bbox_inches='tight')
+    # # plt.show()
+    # plt.close()
+
+
+    # plt.close()
+    # fig,ax = plt.subplots()
+    # plt.xlabel('$\\gamma - 1$')
+    # ax.plot(gamma_edd_a_m, Dipolar, label=f' dipolar emissions{comment}', color = 'tab:blue')
+    # ax.set_ylabel('Dipolar constraints', fontsize=12, color = 'tab:blue')
+    #
+    # fig.legend( bbox_to_anchor=(0.9, 0.7))
+    # # plt.savefig(f'figures/alpha_beta_{nspace}_{descr}.png', dpi = 200,bbox_inches='tight')
+    # plt.show()
 
 make_gamma_beta_plots(150)
