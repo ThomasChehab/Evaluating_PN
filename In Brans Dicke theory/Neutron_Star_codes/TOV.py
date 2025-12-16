@@ -237,6 +237,10 @@ class TOV():
             gamma_theta = (np.sqrt(3+2*self.w) - Xi)/(np.sqrt(3+2*self.w)+Xi)
             self.Ge_theta = gamma_theta
 
+            delta_theta = 4/3 * (gamma_theta**2 - ((3+2*self.w)*(1+Xi**2))/(4 *( np.sqrt(3+2*self.w) + Xi)**2))
+
+            self.Delta_theta = delta_theta
+
 ##################
         else:
             print('Pressure=0 not reached')

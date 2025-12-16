@@ -57,8 +57,15 @@ def run(rho_cen, w):
     ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w))/( D + np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w)) # gamma exact
     ge_theta = tov.Ge_theta # recovering gamma exact computed in TOV class
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n') #computing the relative deviation between both gamma
+
+    delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3+2*w)))**(-2) )
+
+    delta_theta = tov.Delta_theta
+    print('écart pourcent delta', (delta - delta_theta)/delta_theta * 100, '\n')
+    delta_bd = (3+2*w)/(4+2*w)
+
 ###
-    return (b_, D, rho_cen, gamma, g_bd, ge_theta, SoS_c_max)
+    return (b_, D, rho_cen, gamma, g_bd, ge_theta, delta_theta, delta_bd, SoS_c_max)
 ###################################################
 
 #function to compute gamma exact for every density
@@ -78,22 +85,27 @@ def compute_gamma(n,w):
     # creating the vectors that will contains useful parameters
     vsurc_vec = np.array([])
     gamma_edd_vec = np.array([])
+    delta_edd_vec =np.array([])
     gamma_BD_vec = np.array([])
-
+    delta_BD_vec = np.array([])
     start_idx = len(all_a[0])
 
     for den in tqdm(den_space):
-        b_,D , rho_cen, gamma, gamma_BD, gamma_edd, vsurc  = run(den,w) # computing gamma and storing it in vectors for every value of density in den_space
+        b_,D , rho_cen, gamma, gamma_BD, gamma_edd, delta_edd, delta_BD, vsurc  = run(den,w) # computing gamma and storing it in vectors for every value of density in den_space
         vsurc_vec = np.append(vsurc_vec,vsurc ) # Storing sound velocity
         gamma_edd_vec = np.append(gamma_edd_vec,gamma_edd ) # Storing gamma exact
+        delta_edd_vec = np.append(delta_edd_vec, delta_edd)
         gamma_BD_vec = np.append(gamma_BD_vec, gamma_BD)# Storing gamma PN
+        delta_BD_vec = np.append(delta_BD_vec, delta_BD)# Storing gamma PN
 
         if den == den_space[-1]: # at the last value of density, rejecting values that exceed the desired speed of sound
             index_max = np.where(vsurc_vec > 1/np.sqrt(3))[0][0]
             gamma_edd_vec = gamma_edd_vec[0:index_max]
+            delta_edd_vec = delta_edd_vec[0:index_max]
             gamma_BD_vec = gamma_BD_vec[0:index_max]
+            delta_BD_vec = delta_BD_vec[0:index_max]
             den_space = den_space[0:index_max]
-    return gamma_edd_vec,gamma_BD_vec, den_space
+    return gamma_edd_vec, delta_edd_vec, gamma_BD_vec, delta_BD_vec, den_space
 
 
 #function that recovers the previously computed vectors to plot them
@@ -113,36 +125,57 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
 
         # Loading existing data
         if os.path.exists(all_a):
-            gamma_edd_all, gamma_BD_all = np.load(all_a, allow_pickle=True) #loading gamma values
+            gamma_edd_all, gamma_BD_all,delta_edd_all, delta_BD_all = np.load(all_a, allow_pickle=True) #loading gamma values
 
             print(f"Founded incomplete files : {all_a}, {all_w}, {all_rho}")
 
             start_idx = len(gamma_edd_all) #last indexed stored is equal to the len of gamma_edd_all that contains gamma exact values
             print(f'Restarting at w = {start_idx}')
             gamma_edd_all = list(gamma_edd_all)
+            delta_edd_all = list(delta_edd_all)
             gamma_BD_all = list(gamma_BD_all)
+            delta_BD_all = list(delta_BD_all)
         else:
             gamma_edd_all = []
+            delta_edd_all = []
             gamma_BD_all = []
+            delta_BD_all = []
             start_idx = 0
 
         remaining_w_values = w_values[start_idx:]
         counter = len(remaining_w_values)-1 # is useful to print how much values it remains to compute
         for value in remaining_w_values:
-            gamma_edd_vec, gamma_BD_vec, den_space = compute_gamma(n, value) # launching the function that computes gamma for every density, for every w values it remains
+            gamma_edd_vec, delta_edd_vec, gamma_BD_vec, delta_BD_vec, den_space = compute_gamma(n, value)
+ # launching the function that computes gamma for every density, for every w values it remains
 
             print(f'Remaing {counter} iterations')
             gamma_edd_all.append(gamma_edd_vec) # adding computed values
+            delta_edd_all.append(delta_edd_vec)
             gamma_BD_all.append(gamma_BD_vec)
+            delta_BD_all.append(delta_BD_vec)
 
-            np.save(all_a, [np.array(gamma_edd_all),np.array(gamma_BD_all)]) #saving values at every entire w value computed
+            np.save(all_a, [np.array(gamma_edd_all),np.array(gamma_BD_all), np.array(delta_edd_all), np.array(delta_BD_all)]) #saving values at every entire w value computed
             np.save(all_w, [w_values])
             np.save(all_rho, [den_space])
             counter -= 1
         gamma_edd_all = np.array(gamma_edd_all)
         gamma_BD_all = np.array(gamma_BD_all)
+        delta_edd_all = np.array(delta_edd_all)
+        delta_BD_all = np.array(delta_BD_all)
 
 #ploting the results
+
+        plt.figure(figsize=(8,6))
+        mesh = plt.pcolormesh(den_space, w_values, 1-delta_edd_all, shading='auto', cmap='viridis')
+        cbar = plt.colorbar(mesh)
+        cbar.set_label(r'$1-\delta_e$')
+        # cbar.ax.set_yscale("log")
+        plt.yscale("log")
+        plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
+        plt.ylabel(r'$\omega$')
+        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
+        plt.xlim(min(den_space),max(den_space))
+        plt.savefig(f'./saved_matrices_and_plots/delta_exact_m_{n}.png', dpi=200, bbox_inches="tight")
 
         # 1-gamma_e
         plt.figure(figsize=(8,6))
@@ -183,6 +216,18 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb_{n}.png', dpi=200, bbox_inches="tight")
 
+        plt.figure(figsize=(8,6))
+        mesh = plt.pcolormesh(den_space, w_values, ((delta_edd_all-delta_BD_all)/(1-delta_BD_all) ) * 100, shading='auto', cmap='viridis')
+        cbar = plt.colorbar(mesh)
+        cbar.set_label(r'$(\delta_e-\delta_{BD})/(1-\delta_{BD})\%$')
+        # cbar.ax.set_yscale("log")
+        plt.yscale("log")
+        plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
+        plt.ylabel(r'$\omega$')
+        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
+        plt.xlim(min(den_space),max(den_space))
+        plt.savefig(f'./saved_matrices_and_plots/delta_relative_{n}.png', dpi=200, bbox_inches="tight")
+
     else:
 
         save_dir = 'saved_matrices_and_plots'
@@ -191,9 +236,22 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         all_w = os.path.join(save_dir, f'matrice_{n}_w.npy')
         all_rho = os.path.join(save_dir, f'matrice_{n}_rho.npy')
 
-        gamma_edd_all, gamma_BD_all = np.load(all_a, allow_pickle=True)
+        gamma_edd_all, gamma_BD_all, delta_edd_all, delta_BD_all = np.load(all_a, allow_pickle=True)
         w_values = np.load(all_w, allow_pickle=True)[0]
         den_space = np.load(all_rho, allow_pickle=True)[0]
+
+
+        plt.figure(figsize=(8,6))
+        mesh = plt.pcolormesh(den_space, w_values, 1-delta_edd_all, shading='auto', cmap='viridis')
+        cbar = plt.colorbar(mesh)
+        cbar.set_label(r'$1-\delta_e$')
+        # cbar.ax.set_yscale("log")
+        plt.yscale("log")
+        plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
+        plt.ylabel(r'$\omega$')
+        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
+        plt.xlim(min(den_space),max(den_space))
+        plt.savefig(f'./saved_matrices_and_plots/delta_exact_m_{n}.png', dpi=200, bbox_inches="tight")
 
 
         # Second plot 1-gamma_e
@@ -236,6 +294,18 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb_{n}.png', dpi=200, bbox_inches="tight")
 
+        plt.figure(figsize=(8,6))
+        mesh = plt.pcolormesh(den_space, w_values, ((delta_edd_all-delta_BD_all)/(1-delta_BD_all) ) * 100, shading='auto', cmap='viridis')
+        cbar = plt.colorbar(mesh)
+        cbar.set_label(r'$(\delta_e-\delta_{BD})/(1-\delta_{BD})\%$')
+        # cbar.ax.set_yscale("log")
+        plt.yscale("log")
+        plt.xlabel(r'Density $\rho$ (MeV/fm$^3$)')
+        plt.ylabel(r'$\omega$')
+        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
+        plt.xlim(min(den_space),max(den_space))
+        plt.savefig(f'./saved_matrices_and_plots/delta_relative_{n}.png', dpi=200, bbox_inches="tight")
+
 # function that recover and plot and if files does not exist, launch the other function to compute them
 def recover_and_plot(n, lowest_w, highest_w):
 
@@ -260,5 +330,5 @@ def recover_and_plot(n, lowest_w, highest_w):
         count=0
         plot_w_vs_rho(lowest_w, highest_w, n, count)
 
-recover_and_plot(n=10, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
+recover_and_plot(n=150, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
 
