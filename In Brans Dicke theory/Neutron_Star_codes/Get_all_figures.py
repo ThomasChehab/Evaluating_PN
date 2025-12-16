@@ -43,7 +43,7 @@ def run(rho_cen, w):
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
     SoS_c_max = np.max(tov.v_c)
-    b_ = 1/(np.sqrt(3+2*w))
+    b_ = 2/(np.sqrt(3+2*w))
     C = f_b[-1]/f_phi[-1]
     a1 = 1
     a2 = b_*(C+1)
@@ -53,12 +53,12 @@ def run(rho_cen, w):
 ###
     D = (1-gamma**2)/(1+gamma**2)
     g_bd = (1+w)/(2+w)
-    ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * (1/(2 * np.sqrt(3+2*w))))/( D + np.sign(gamma)* np.sqrt(1-D**2) * (1/(2 * np.sqrt(3+2*w))))
+    ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * b_/2)/( D + np.sign(gamma)* np.sqrt(1-D**2) * b_/2)
     theta_inf = ((w+1-ge * ( w+2))/(ge*w+ge-w-2))
     ge_theta = tov.Ge_theta
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
 ###
-    return (b_, D, rho_cen, gamma, g_bd, ge_theta, SoS_c_max)
+    return (b_, D, rho_cen, gamma, g_bd, ge, SoS_c_max)
 
 ###################################################
 def compute_gamma(n,w):

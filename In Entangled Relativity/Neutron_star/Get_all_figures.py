@@ -53,7 +53,7 @@ def run(rho_cen):
     comment = '$L_m = -\\rho$'
     descr = 'rho'
     D = (1-gamma**2)/(1+gamma**2)
-    ge = ((D - np.sign(gamma) * 2/np.sqrt(3) * np.sqrt(1-D**2)/2))/((D +  np.sign(gamma) * 2/np.sqrt(3) * np.sqrt(1-D**2)/2))
+    ge = ((D - np.sign(gamma) * 1/np.sqrt(3) * np.sqrt(1-D**2)))/((D +  np.sign(gamma) * 1/np.sqrt(3) * np.sqrt(1-D**2)))
     # print('ge =', ge)
     ge_theta = tov.Ge_theta
     # print('ge_theta =', ge_theta)
@@ -111,6 +111,16 @@ def make_gamma_beta_plots(n):
     # fig.legend( bbox_to_anchor=(0.9, 0.7))
     # # plt.savefig(f'figures/alpha_beta_{nspace}_{descr}.png', dpi = 200,bbox_inches='tight')
     # plt.show()
+
+    fig,ax = plt.subplots()
+    plt.xlabel('Central density ($MeV/fm^3$)')
+    ax.plot(den_space,(1-gamma_edd_a) * 100, label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$1-\\gamma_e\%$', fontsize=18)#, color = 'tab:blue')
+
+    fig.legend( bbox_to_anchor=(0.9, 0.6))
+    plt.savefig(f'./evaluating_gamma_exact_m_percent.png', dpi = 200,bbox_inches='tight')
+    # plt.show()
+    plt.close()
 
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
