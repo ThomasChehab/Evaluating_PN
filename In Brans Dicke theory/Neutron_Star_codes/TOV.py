@@ -10,8 +10,6 @@ from scipy.integrate import solve_ivp
 from scipy.integrate import cumulative_trapezoid as integcum
 from scipy.integrate import trapezoid as integ
 import os
-# import mplhep as hep
-# hep.style.use("ATLAS")
 import csv
 from scipy.integrate import simpson as simps
 
@@ -164,14 +162,6 @@ class TOV():
             print('radius min ',r_min)
             print('radius max ',self.radiusMax_in)
         sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45',t_eval=r ,args=(self.w,))
-        # condition for Pressure = 0
-        '''
-        self.g_rr = b(sol.t, sol.y[1])
-        a_dot_a = adota(sol.t, sol.y[0], sol.y[1], sol.y[3], sol.y[2])
-        self.g_tt = np.exp(np.concatenate([[0.0], integcum(a_dot_a,sol.t)])-integ(a_dot_a,sol.t))
-        plt.plot(self.g_tt/self.g_rr)
-        plt.show()
-        '''
         if sol.t[-1]<self.radiusMax_in:
             self.pressure = sol.y[0][0:-2]
             self.mass = sol.y[1][0:-2]
@@ -225,9 +215,6 @@ class TOV():
             r = self.radius[0:-2]
             a_dot_a = a_dot_a[0:-2]
             b_dot_b = b_dot_b[0:-2]
-            # R = -(2/B)*(a_2dot/(2*A)-0.5*a_dot_a**2+0.5*(0.5*a_dot_a+2/r)*(a_dot_a-b_dot_b)+(1-B)/(r**2))
-            # R_interpol = interp1d(self.radius[0:-2], R, fill_value="extrapolate")
-            # self.R = R_interpol(self.radius)
             self.massADM = self.mass[-1]
             self.g_tt_ext = np.array(self.g_tt[n_star:-1])
             self.g_rr_ext = np.array(self.g_rr[n_star:-1])
@@ -249,68 +236,14 @@ class TOV():
             gamma_bd = (1+self.w) /(2+self.w)
             gamma_theta = (np.sqrt(3+2*self.w) - Xi)/(np.sqrt(3+2*self.w)+Xi)
             self.Ge_theta = gamma_theta
-            # print('gamma theta', gamma_theta)
 
 ##################
         else:
             print('Pressure=0 not reached')
 
     def ComputeTOV_normalization(self):
-
         self.Compute()
         self.initPhi = self.initPhi/self.phi_inf
         self.Compute()
-        print('phi inf', self.phi_inf)
-
-    def find_dilaton_center(self):
-        w = self.w
-        initDensity = self.initDensity
-        precision = 1e-4#8
-        log_active = self.log_active
-        radiusMax_out = self.radiusMax_out
-        radiusMax_in = self.radiusMax_in
-        Npoint = self.Npoint
-        initPsi = 0
-        radiusInit = 0.000001
-        dilaton = True
-        #Find limits of potential Phi_0
-        Phi0_min, Phi0_max = 0.5, 1.5 # initial limits
-        tov_min = TOV(initDensity, initPsi, Phi0_min, radiusMax_in, radiusMax_out, Npoint, log_active, w)
-        tov_min.Compute()
-        Phi_inf_min = tov_min.Phi[-1]
-        while Phi_inf_min > 1:
-            Phi0_min -= 0.1
-            if Phi0_min == 0:
-                Phi0_min = 1e-2
-                 #print(f'Had to put l.h.s. limit of $\Phi_0$ to {Phi0_min}')
-            tov_min = TOV(initDensity, initPsi, Phi0_min, radiusMax_in, radiusMax_out, Npoint,log_active, w)
-            tov_min.Compute()
-            Phi_inf_min = tov_min.Phi[-1]
-             #print(f'Had to lower down the l.h.s.limit of $\Phi_0$ to {Phi0_min:.1f}')
-        tov_max = TOV(initDensity, initPsi, Phi0_max, radiusMax_in, radiusMax_out, Npoint, log_active, w)
-        tov_max.Compute()
-        Phi_inf_max = tov_max.Phi[-1]
-        while Phi_inf_max <1:
-            Phi0_max += 0.1
-            tov_max = TOV(initDensity, initPsi, Phi0_max, radiusMax_in, radiusMax_out, Npoint, log_active, w)
-            tov_max.Compute()
-            Phi_inf_max = tov_max.Phi[-1]
-             #print(f'Had to increase the r.h.s. limit of $\Phi_0$ to {Phi0_max:.1f}')
-        #Search for Phi_0 that leads to Phi_inf = 1 to a given precision by dichotomy
-        step_precision = 1
-        Phi0_dicho = np.array([Phi0_min, (Phi0_min + Phi0_max) / 2, Phi0_max])
-        Phi_inf_dicho = np.zeros(3)
-        while step_precision > precision:
-            for n in range(3):
-                tov = TOV(initDensity, initPsi, Phi0_dicho[n], radiusMax_in, radiusMax_out, Npoint, log_active, w)
-                tov.Compute()
-                Phi_inf_dicho[n] = tov.Phi[-1]
-            N = np.min(np.argwhere(Phi_inf_dicho>1))
-            Phi0_min = Phi0_dicho[N-1]
-            Phi0_max = Phi0_dicho[N]
-            Phi0_dicho = [Phi0_min, (Phi0_min + Phi0_max) / 2, Phi0_max]
-            step_precision = np.abs(Phi_inf_dicho[N] - Phi_inf_dicho[N-1])
-            Phi = (Phi0_min + Phi0_max) / 2
-        return Phi, (Phi0_min + Phi0_max) / 2, (Phi0_min - Phi0_max) / 2, (Phi_inf_dicho[N] + Phi_inf_dicho[N-1]) / 2
 
 

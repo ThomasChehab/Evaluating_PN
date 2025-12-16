@@ -19,62 +19,63 @@ import mplhep as hep
 hep.style.use("ATLAS")
 from tqdm import tqdm
 
-
+# function that compute JNW parameter and hence gamma exact
 def run(rho_cen, w):
-    PhiInit = 1
+    PhiInit = 1 #definition of initial values
     PsiInit = 0
-    radiusMax_in = 40000
-    radiusMax_out = 10000000
-    Npoint = 1000000
-    log_active = False
+    radiusMax_in = 40000 # maximal radius of the star
+    radiusMax_out = 10000000 # maximal radius outside the star
+    Npoint = 1000000 #number of points
+    log_active = False #True = print star's structure values
     rhoInit = rho_cen*cst.eV*10**6/(cst.c**2*cst.fermi**3)
-    tov = TOV(rhoInit , PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, log_active, w)
-    tov.ComputeTOV_normalization()
-    r = tov.radius
+    tov = TOV(rhoInit , PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, log_active, w) # introducing tov class
+    tov.ComputeTOV_normalization() # Launching TOV numerical integration with the normalization of phi at infinity
+    r = tov.radius #recovering parameters
     a = tov.g_tt
     b = tov.g_rr
     phi = tov.Phi
     phi_dot = tov.Psi
     radiusStar = tov.radiusStar
     mass_ADM = tov.massADM / (1.989*10**30) # in solar mass
-    a_dot = (-a[1:-2]+a[2:-1])/(r[2:-1]-r[1:-2])
+    a_dot = (-a[1:-2]+a[2:-1])/(r[2:-1]-r[1:-2]) #computing derivative
     b_dot = (-b[1:-2]+b[2:-1])/(r[2:-1]-r[1:-2])
     f_a = -a_dot*r[1:-2]*r[1:-2]/1000
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
-    SoS_c_max = np.max(tov.v_c)
-    b_ = 2/(np.sqrt(3+2*w))
-    C = f_b[-1]/f_phi[-1]
+    SoS_c_max = np.max(tov.v_c) #defining the speed of sound (should not exceed c/sqrt(3))
+    b_ = 2/(np.sqrt(3+2*w)) #conformal factor used
+    C = f_b[-1]/f_phi[-1] #parameter that tend to infinity
+    #recovering gamma by solving the Second degree equation obtain by analytically solving C
     a1 = 1
     a2 = b_*(C+1)
     a3 = -1
     a4 = a2*a2-4*a1*a3
     gamma = (-a2-np.sqrt(a4))/(2*a1)
 ###
-    D = (1-gamma**2)/(1+gamma**2)
-    g_bd = (1+w)/(2+w)
-    ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * b_/2)/( D + np.sign(gamma)* np.sqrt(1-D**2) * b_/2)
-    theta_inf = ((w+1-ge * ( w+2))/(ge*w+ge-w-2))
-    ge_theta = tov.Ge_theta
-    print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
+    D = (1-gamma**2)/(1+gamma**2) #renaming JNW parameter
+    g_bd = (1+w)/(2+w) #gamma PN
+    ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w))/( D + np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w)) # gamma exact
+    ge_theta = tov.Ge_theta # recovering gamma exact computed in TOV class
+    print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n') #computing the relative deviation between both gamma
 ###
     return (b_, D, rho_cen, gamma, g_bd, ge_theta, SoS_c_max)
-
 ###################################################
+
+#function to compute gamma exact for every density
 def compute_gamma(n,w):
-    nspace = n
+    nspace = n #number of w values
 
     # Saving repository
     save_dir = 'saved_matrices_and_plots'
-    if not os.path.exists(save_dir):
+    if not os.path.exists(save_dir): # Creating the folder if it does not exist
         os.makedirs(save_dir)
 
-    all_a = os.path.join(save_dir, f'matrice_{n}.npy')
+    all_a = os.path.join(save_dir, f'matrice_{n}.npy') # Matrices to store values
 
-    #densité
+    # density
     den_space = np.linspace(100,2000,num=n)
 
-    # création des vecteurs qui vont contenir les paramèrtes utiles
+    # creating the vectors that will contains useful parameters
     vsurc_vec = np.array([])
     gamma_edd_vec = np.array([])
     gamma_BD_vec = np.array([])
@@ -82,48 +83,41 @@ def compute_gamma(n,w):
     start_idx = len(all_a[0])
 
     for den in tqdm(den_space):
-        b_,D , rho_cen, gamma, gamma_BD, gamma_edd, vsurc  = run(den,w)
+        b_,D , rho_cen, gamma, gamma_BD, gamma_edd, vsurc  = run(den,w) # computing gamma and storing it in vectors for every value of density in den_space
+        vsurc_vec = np.append(vsurc_vec,vsurc ) # Storing sound velocity
+        gamma_edd_vec = np.append(gamma_edd_vec,gamma_edd ) # Storing gamma exact
+        gamma_BD_vec = np.append(gamma_BD_vec, gamma_BD)# Storing gamma PN
 
-        vsurc_vec = np.append(vsurc_vec,vsurc )
-
-        gamma_edd_vec = np.append(gamma_edd_vec,gamma_edd )
-        # on récupère gamma BD
-        gamma_BD_vec = np.append(gamma_BD_vec, gamma_BD)
-    # On ne veut que les cas ou v < c/sqrt(3)
-
-        if den == den_space[-1]: # si la valeur de densité est la dernière, tronquer
+        if den == den_space[-1]: # at the last value of density, rejecting values that exceed the desired speed of sound
             index_max = np.where(vsurc_vec > 1/np.sqrt(3))[0][0]
             gamma_edd_vec = gamma_edd_vec[0:index_max]
             gamma_BD_vec = gamma_BD_vec[0:index_max]
             den_space = den_space[0:index_max]
-            # print(den_space[-1])
-
     return gamma_edd_vec,gamma_BD_vec, den_space
 
 
-
+#function that recovers the previously computed vectors to plot them
 def plot_w_vs_rho(lowest_w, highest_w, n, count):
 
+# if count = 0 some files exists
     if count==0:
-
         save_dir = 'saved_matrices_and_plots'
         os.makedirs(save_dir, exist_ok=True)
 
-        w_values = np.linspace(lowest_w, highest_w, n)
+        w_values = np.linspace(lowest_w, highest_w, n) #setting the possible values of w
         w_values = np.exp(w_values)
-        den_space = np.linspace(100,2000,num=n)
 
-        all_a = os.path.join(save_dir, f'matrice_{n}.npy')
-        all_w = os.path.join(save_dir, f'matrice_{n}_w.npy')
-        all_rho = os.path.join(save_dir, f'matrice_{n}_rho.npy')
+        all_a = os.path.join(save_dir, f'matrice_{n}.npy')# recovering matrices that contain values. all_a containt values of gamma exact and gamma PN
+        all_w = os.path.join(save_dir, f'matrice_{n}_w.npy') # all_w contains values of w
+        all_rho = os.path.join(save_dir, f'matrice_{n}_rho.npy')# all_rho contains density values
 
         # Loading existing data
         if os.path.exists(all_a):
-            gamma_edd_all, gamma_BD_all = np.load(all_a, allow_pickle=True)
+            gamma_edd_all, gamma_BD_all = np.load(all_a, allow_pickle=True) #loading gamma values
 
             print(f"Founded incomplete files : {all_a}, {all_w}, {all_rho}")
 
-            start_idx = len(gamma_edd_all)
+            start_idx = len(gamma_edd_all) #last indexed stored is equal to the len of gamma_edd_all that contains gamma exact values
             print(f'Restarting at w = {start_idx}')
             gamma_edd_all = list(gamma_edd_all)
             gamma_BD_all = list(gamma_BD_all)
@@ -133,20 +127,22 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
             start_idx = 0
 
         remaining_w_values = w_values[start_idx:]
-        counter = len(remaining_w_values)-1
+        counter = len(remaining_w_values)-1 # is useful to print how much values it remains to compute
         for value in remaining_w_values:
-            gamma_edd_vec, gamma_BD_vec, den_space = compute_gamma(n, value)
+            gamma_edd_vec, gamma_BD_vec, den_space = compute_gamma(n, value) # launching the function that computes gamma for every density, for every w values it remains
 
             print(f'Remaing {counter} iterations')
-            gamma_edd_all.append(gamma_edd_vec)
+            gamma_edd_all.append(gamma_edd_vec) # adding computed values
             gamma_BD_all.append(gamma_BD_vec)
 
-            np.save(all_a, [np.array(gamma_edd_all),np.array(gamma_BD_all)])
+            np.save(all_a, [np.array(gamma_edd_all),np.array(gamma_BD_all)]) #saving values at every entire w value computed
             np.save(all_w, [w_values])
             np.save(all_rho, [den_space])
             counter -= 1
         gamma_edd_all = np.array(gamma_edd_all)
         gamma_BD_all = np.array(gamma_BD_all)
+
+#ploting the results
 
         # 1-gamma_e
         plt.figure(figsize=(8,6))
@@ -240,29 +236,29 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/ge-gb_on_1-gb_{n}.png', dpi=200, bbox_inches="tight")
 
-
+# function that recover and plot and if files does not exist, launch the other function to compute them
 def recover_and_plot(n, lowest_w, highest_w):
 
-    save_dir = 'saved_matrices_and_plots'
+    save_dir = 'saved_matrices_and_plots'# creating the directiories
     os.makedirs(save_dir, exist_ok=True)
 
     file_path = os.path.join(save_dir, f'matrice_{n}.npy')
 
     if os.path.exists(file_path):
         all_a = np.load(file_path)
-        if len(all_a[0]) == n:
+        if len(all_a[0]) == n:# if len of the function that contains gamma exact is equal to the desired number of iteration, files are complete and count = 1 (code directly ploting the results)
             print('Complete files detected')
             count = 1
             plot_w_vs_rho(lowest_w, highest_w, n, count)
-        else:
+        else: # if all_a exist but is not complete
             print('Incomplete files')
             count=0
             plot_w_vs_rho(lowest_w, highest_w, n, count)
 
     else:
-        print('Missing files')
+        print('Missing files') #if all_a does not exist
         count=0
         plot_w_vs_rho(lowest_w, highest_w, n, count)
 
-recover_and_plot(n=150, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
+recover_and_plot(n=10, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
 
