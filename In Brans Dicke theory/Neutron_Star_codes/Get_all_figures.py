@@ -62,7 +62,7 @@ def run(rho_cen, w):
 
     delta_theta = tov.Delta_theta
     print('écart pourcent delta', (delta - delta_theta)/delta_theta * 100, '\n')
-    delta_bd = (3+2*w)/(4+2*w)
+    delta_bd = 4/3 * (g_bd)**2 + 4/3 * 1 - g_bd/6 - 3/2
 
 ###
     return (b_, D, rho_cen, gamma, g_bd, ge_theta, delta_theta, delta_bd, SoS_c_max)
