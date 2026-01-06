@@ -57,19 +57,11 @@ def run(rho_cen):
     # print('ge =', ge)
     ge_theta = tov.Ge_theta
     # print('ge_theta =', ge_theta)
-    print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
     gamma_dev_per = (ge- ge_theta)/ge_theta *100
-
     delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3)))**(-2) )
-
     delta_theta = tov.Delta_theta
-    print('écart pourcent delta', (delta - delta_theta)/delta_theta * 100, '\n')
     delta_dev_per = (delta - delta_theta)/delta_theta * 100
-
-
     return (b_, D, rho_cen, gamma, ge_theta, delta_theta, gamma_dev_per, delta_dev_per, SoS_c_max)
-
-# run(1500)
 
 def make_gamma_beta_plots(n):
     nspace = n
@@ -79,8 +71,8 @@ def make_gamma_beta_plots(n):
     vsurc_a = np.array([])
     gamma_edd_a = np.array([])
     delta_edd_a = np.array([])
-    gamma_dev_per = np.array([])
-    delta_dev_per = np.array([])
+    gamma_dev_per_a = np.array([])
+    delta_dev_per_a = np.array([])
 
     for den in den_space:
         b_, D, rho_cen, gamma, ge, de, gamma_dev, delta_dev, vsurc  = run(den)
@@ -100,8 +92,8 @@ def make_gamma_beta_plots(n):
     delta_dev_per_a = delta_dev_per_a[0:index_max]
     comment = '$L_m = -\\rho$'
 
-    print('maximal deviation in percent between both gamma computation =', max(gamma_dev_per_a))
-    print('maximal deviation in percent between both delta computation =', max(delta_dev_per_a))
+    print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_a)), '%')
+    print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_a)), '%')
 
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
@@ -121,6 +113,5 @@ def make_gamma_beta_plots(n):
     plt.savefig(f'./delta_exact_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
-
 
 make_gamma_beta_plots(150)

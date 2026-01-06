@@ -176,8 +176,8 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         gamma_dev_per_all = np.array(gamma_dev_per_all)
         delta_dev_per_all = np.array(delta_dev_per_all)
 
-        print('maximal deviation in percent between both gamma computation =', max(gamma_dev_per_all[0]))
-        print('maximal deviation in percent between both delta computation =', max(delta_dev_per_all[0]))
+        print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_all[0])), '%')
+        print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_all[0])), '%')
 
 #ploting the results
 
@@ -256,8 +256,8 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         w_values = np.load(all_w, allow_pickle=True)[0]
         den_space = np.load(all_rho, allow_pickle=True)[0]
 
-        print('maximal deviation in percent between both gamma computation =', max(gamma_dev_per_all[0]))
-        print('maximal deviation in percent between both delta computation =', max(delta_dev_per_all[0]))
+        print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_all[0])), '%')
+        print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_all[0])), '%')
 
         plt.figure(figsize=(8,6))
         mesh = plt.pcolormesh(den_space, w_values, 1-delta_edd_all, shading='auto', cmap='viridis')
