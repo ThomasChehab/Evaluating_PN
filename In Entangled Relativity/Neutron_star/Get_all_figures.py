@@ -64,6 +64,8 @@ def run(rho_cen):
     delta_theta = tov.Delta_theta
     print('écart pourcent delta', (delta - delta_theta)/delta_theta * 100, '\n')
 
+
+
     return (b_, D, rho_cen, gamma, ge_theta, delta_theta, SoS_c_max)
 
 # run(1500)
@@ -97,38 +99,20 @@ def make_gamma_beta_plots(n):
 
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
-    ax.plot(den_space,(1-gamma_edd_a) * 100, label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
-    ax.set_ylabel('$1-\\gamma_e\%$', fontsize=18)#, color = 'tab:blue')
+    ax.plot(den_space,(1-gamma_edd_a), label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$1-\\gamma_e$', fontsize=18)#, color = 'tab:blue')
     fig.legend( bbox_to_anchor=(0.9, 0.6))
-    plt.savefig(f'./evaluating_gamma_exact_m_percent.png', dpi = 200,bbox_inches='tight')
+    plt.savefig(f'./gamma_exact_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
-    #
-    # fig,ax = plt.subplots()
-    # plt.xlabel('Central density ($MeV/fm^3$)')
-    # ax.plot(den_space,1-gamma_edd_a, label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
-    # ax.set_ylabel('$1-\\gamma_e$', fontsize=18)#, color = 'tab:blue')
-    # fig.legend( bbox_to_anchor=(0.9, 0.6))
-    # plt.savefig(f'./evaluating_gamma_exact_m.png', dpi = 200,bbox_inches='tight')
-    # # plt.show()
-    # plt.close()
-
-    # fig,ax = plt.subplots()
-    # plt.xlabel('Central density ($MeV/fm^3$)')
-    # ax.plot(den_space,gamma_edd_a, label=f'$\\gamma_e$ ({comment})', color = 'tab:blue')
-    # ax.set_ylabel('$\\gamma_e $', fontsize=18)#, color = 'tab:blue')
-    # fig.legend( bbox_to_anchor=(0.9, 0.6))
-    # plt.savefig(f'./evaluating_gamma_exact.png', dpi = 200,bbox_inches='tight')
-    # # plt.show()
-    # plt.close()
 
     # Plot de delta :
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
-    ax.plot(den_space,(1-delta_edd_a) *100, label=f'$1-\\delta_e$ ({comment})', color = 'tab:blue')
-    ax.set_ylabel('$1-\\delta_e\%$', fontsize=18)#, color = 'tab:blue')
+    ax.plot(den_space,(1-delta_edd_a), label=f'$1-\\delta_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$1-\\delta_e$', fontsize=18)#, color = 'tab:blue')
     fig.legend( bbox_to_anchor=(0.9, 0.6))
-    plt.savefig(f'./evaluating_delta_percent_m.png', dpi = 200,bbox_inches='tight')
+    plt.savefig(f'./delta_exact_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
 
