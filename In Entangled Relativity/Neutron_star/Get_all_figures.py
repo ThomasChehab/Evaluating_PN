@@ -58,15 +58,16 @@ def run(rho_cen):
     ge_theta = tov.Ge_theta
     # print('ge_theta =', ge_theta)
     print(' écart pourcent theta', (ge- ge_theta)/ge_theta *100, '\n')
+    gamma_dev_per = (ge- ge_theta)/ge_theta *100
 
     delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3)))**(-2) )
 
     delta_theta = tov.Delta_theta
     print('écart pourcent delta', (delta - delta_theta)/delta_theta * 100, '\n')
+    delta_dev_per = (delta - delta_theta)/delta_theta * 100
 
 
-
-    return (b_, D, rho_cen, gamma, ge_theta, delta_theta, SoS_c_max)
+    return (b_, D, rho_cen, gamma, ge_theta, delta_theta, gamma_dev_per, delta_dev_per, SoS_c_max)
 
 # run(1500)
 
@@ -78,24 +79,29 @@ def make_gamma_beta_plots(n):
     vsurc_a = np.array([])
     gamma_edd_a = np.array([])
     delta_edd_a = np.array([])
-
+    gamma_dev_per = np.array([])
+    delta_dev_per = np.array([])
 
     for den in den_space:
-        b_, D, rho_cen, gamma, ge, de, vsurc  = run(den)
+        b_, D, rho_cen, gamma, ge, de, gamma_dev, delta_dev, vsurc  = run(den)
 
-        vsurc_a = np.append(vsurc_a,vsurc )
-        gamma_edd_a = np.append(gamma_edd_a,ge )
-        delta_edd_a = np.append(delta_edd_a,de )
+        vsurc_a = np.append(vsurc_a,vsurc)
+        gamma_edd_a = np.append(gamma_edd_a,ge)
+        delta_edd_a = np.append(delta_edd_a,de)
+        gamma_dev_per_a = np.append(gamma_dev_per_a,gamma_dev)
+        delta_dev_per_a = np.append(delta_dev_per_a,delta_dev)
 
     index_max = np.where(vsurc_a > 1/np.sqrt(3))[0][0]
     den_space = den_space[0:index_max]
     # print('densité max', den_space[-1])
     gamma_edd_a = gamma_edd_a[0:index_max]
     delta_edd_a = delta_edd_a[0:index_max]
-
-    # comment = '$L_m = -\\epsilon$'#-\\rho$'
+    gamma_dev_per_a = gamma_dev_per_a[0:index_max]
+    delta_dev_per_a = delta_dev_per_a[0:index_max]
     comment = '$L_m = -\\rho$'
 
+    print('maximal deviation in percent between both gamma computation =', max(gamma_dev_per_a))
+    print('maximal deviation in percent between both delta computation =', max(delta_dev_per_a))
 
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
