@@ -348,5 +348,5 @@ def recover_and_plot(n, lowest_w, highest_w):
         count=0
         plot_w_vs_rho(lowest_w, highest_w, n, count)
 
-recover_and_plot(n=150, lowest_w = np.log(1e-1),highest_w = np.log(1e5))
+recover_and_plot(n=150, lowest_w = np.log(1e-1),highest_w = np.log(1e6))
 
