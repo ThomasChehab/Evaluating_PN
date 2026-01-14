@@ -95,11 +95,11 @@ def make_gamma_beta_plots(n):
     print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_a)), '%')
     print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_a)), '%')
 
-    print('minimal deviation from unity of gamma =', min(1 - (gamma_edd_a)), '%')
-    print('minimal deviation from unity of delta =', min(1 - (delta_edd_a)), '%')
+    print('minimal deviation from unity of gamma =', min(1 - (gamma_edd_a))*100, '%')
+    print('minimal deviation from unity of delta =', min(1 - (delta_edd_a))*100, '%')
 
-    print('maximal deviation from unity of gamma =', max(1 - (gamma_edd_a)), '%')
-    print('maximal deviation from unity of delta =', max(1 - (delta_edd_a)), '%')
+    print('maximal deviation from unity of gamma =', max(1 - (gamma_edd_a))*100, '%')
+    print('maximal deviation from unity of delta =', max(1 - (delta_edd_a))*100, '%')
 
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
