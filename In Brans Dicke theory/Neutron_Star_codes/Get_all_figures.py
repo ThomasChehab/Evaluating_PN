@@ -179,6 +179,16 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_all[0])), '%')
         print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_all[0])), '%')
 
+        dev_gamma_unity =  max(1-gamma_edd_all[0])
+        print('maximal deviation from unity of gamma exact', dev_gamma_unity, '\n')
+        dev_delta_unity = max(1-delta_edd_all[0])
+        print('maximal deviation from unity of delta exact', dev_delta_unity, '\n')
+
+        rel_dev_gamma =  max(((gamma_edd_all[-1]-gamma_BD_all)[-1]/(1-gamma_BD_all[-1]) ) * 100)
+        print('maximal relative deviation for gamma', rel_dev_gamma, '\n')
+        rel_dev_delta = max((((delta_edd_all[-1]-delta_BD_all)[-1]/(1-delta_BD_all[-1]) ) * 100))
+        print('maximal relative deviation for delta', rel_dev_delta)
+
 #ploting the results
 
         plt.figure(figsize=(8,6))
@@ -205,19 +215,6 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.ylim(np.exp(lowest_w), np.exp(highest_w))
         plt.xlim(min(den_space),max(den_space))
         plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_exact_m_{n}.png', dpi=200, bbox_inches="tight")
-
-        # gamma_e-gamma_BD
-        plt.figure(figsize=(8,6))
-        mesh = plt.pcolormesh(den_space, w_values, gamma_edd_all-gamma_BD_all, shading='auto', cmap='viridis')
-        cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e - \gamma_{BD}$')
-        # cbar.ax.set_yscale("log")
-        plt.yscale("log")
-        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
-        plt.xlim(min(den_space),max(den_space))
-        plt.xlabel(r'Density $\rho_c$ (MeV/fm$^3$)')
-        plt.ylabel(r'$\omega$')
-        plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_e-gamma_BD_{n}.png', dpi=200, bbox_inches="tight")
 
         # gamma_e-gamma_BD/1-g_BD
         plt.figure(figsize=(8,6))
@@ -259,6 +256,16 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_all[0])), '%')
         print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_all[0])), '%')
 
+        dev_gamma_unity =  max(1-gamma_edd_all[0])
+        print('maximal deviation from unity of gamma exact', dev_gamma_unity, '\n')
+        dev_delta_unity = max(1-delta_edd_all[0])
+        print('maximal deviation from unity of delta exact', dev_delta_unity, '\n')
+
+        rel_dev_gamma =  max(((gamma_edd_all[-1]-gamma_BD_all)[-1]/(1-gamma_BD_all[-1]) ) * 100)
+        print('maximal relative deviation for gamma', rel_dev_gamma, '\n')
+        rel_dev_delta = max((((delta_edd_all[-1]-delta_BD_all)[-1]/(1-delta_BD_all[-1]) ) * 100))
+        print('maximal relative deviation for delta', rel_dev_delta)
+
         plt.figure(figsize=(8,6))
         mesh = plt.pcolormesh(den_space, w_values, 1-delta_edd_all, shading='auto', cmap='viridis')
         cbar = plt.colorbar(mesh)
@@ -284,20 +291,6 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         plt.xlabel(r'Density $\rho_c$ (MeV/fm$^3$)')
         plt.ylabel(r'$\omega$')
         plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_exact_m_{n}.png', dpi=200, bbox_inches="tight")
-
-        # gamma_e-gamma_BD
-        plt.figure(figsize=(8,6))
-        mesh = plt.pcolormesh(den_space, w_values, gamma_edd_all-gamma_BD_all, shading='auto', cmap='viridis')
-        cbar = plt.colorbar(mesh)
-        cbar.set_label(r'$\gamma_e - \gamma_{BD}$')
-        # cbar.ax.set_yscale("log")
-        plt.yscale("log")
-        plt.ylim(np.exp(lowest_w), np.exp(highest_w))
-        plt.xlim(min(den_space),max(den_space))
-        plt.xlabel(r'Density $\rho_c$ (MeV/fm$^3$)')
-        plt.ylabel(r'$\omega$')
-        plt.savefig(f'./saved_matrices_and_plots/heatmap_gamma_e-gamma_BD_{n}.png', dpi=200, bbox_inches="tight")
-
 
         # gamma_e-gamma_BD/1-g_BD
         plt.figure(figsize=(8,6))
