@@ -65,7 +65,7 @@ def run(rho_cen):
 #function that compute vectors and plot them
 def make_gamma_beta_plots(n):
 
-    nspace = n #step of integration
+    nspace = n #number of iteration
     den_space = np.linspace(100,2000,num=n) #min max density
     beta_vec = np.array([])
     vsurc_a = np.array([])
