@@ -8,4 +8,4 @@ Then, in a terminal run :
 
 This command will execute the code and generate two figures. One for gamma-1 and one for delta-1 versus energy densities ranging from 100 to 1578 MeV/fm³. 
 
-These are the figures 1 and 2 of the paper ... . The code runs in less than a minutes.
+These are the figures 5 and 6 of the paper ... . The code runs in some minutes.
