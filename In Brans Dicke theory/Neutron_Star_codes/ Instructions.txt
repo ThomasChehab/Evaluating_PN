@@ -1,0 +1,15 @@
+This code aims to compute the value of Post-Newtonian parameters gamma and delta of neutron stars in Brans-Dicke theory by solving the modified TOV equations.
+
+To launch the code, download everything from the GitHub repository. Then, you need to install the packages listed in the requirements.txt file.
+
+Then, in a terminal run :
+
+" python3 Get_all_figures.py " 
+
+This command will execute the code and generate 4 figures.
+- Plot of 1-gamma exact for 150 different values of omega and of central densities
+- Plot of the relative difference between the exact and standard post-Newtonian parameters gamma for 150 different values of omega and central densities.
+- Plot of 1-delta exact for 150 different values of omega and of central densities
+- Plot of the relative difference between the exact and standard post-Newtonian parameters delta for 150 different values of omega and central densities.
+
+These are the figures 1,2,3 and 4 of the paper. The code runs in 4-5 hours.

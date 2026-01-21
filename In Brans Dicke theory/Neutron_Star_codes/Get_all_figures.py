@@ -43,7 +43,7 @@ def run(rho_cen, w):
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
     SoS_c_max = np.max(tov.v_c) #defining the speed of sound (should not exceed c/sqrt(3))
-    b_ = 2/(np.sqrt(3+2*w)) #conformal factor used
+    b_ = 2/(np.sqrt(3+2*w))
     C = f_b[-1]/f_phi[-1] #parameter that tend to infinity
     #recovering gamma by solving the Second degree equation obtain by analytically solving C
     a1 = 1
@@ -51,18 +51,15 @@ def run(rho_cen, w):
     a3 = -1
     a4 = a2*a2-4*a1*a3
     gamma = (-a2-np.sqrt(a4))/(2*a1)
-###
     D = (1-gamma**2)/(1+gamma**2) #renaming JNW parameter
     g_bd = (1+w)/(2+w) #gamma post-Newtonian in Brans Dicke
     ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w))/( D + np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w)) # gamma exact
     ge_theta = tov.Ge_theta # recovering gamma exact computed in TOV class
     gamma_dev_per = (ge- ge_theta)/ge_theta *100
     delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3+2*w)))**(-2) )
-
     delta_theta = tov.Delta_theta
     delta_bd = 4/3 * (g_bd)**2 + 4/3 * 1 - g_bd/6 - 3/2 #delta post-Newtonian in Brans Dicke
     delta_dev_per = (delta - delta_theta)/delta_theta * 100
-###
     return (b_, D, rho_cen, gamma, g_bd, ge_theta, delta_theta, delta_bd, gamma_dev_per, delta_dev_per, SoS_c_max)
 ###################################################
 
