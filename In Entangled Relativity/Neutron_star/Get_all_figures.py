@@ -27,39 +27,36 @@ def run(rho_cen):
     log_active = False #True = print star's structure values
     dilaton_active = True
     rhoInit = rho_cen*cst.eV*10**6/(cst.c**2*cst.fermi**3)
-    tov = TOV(rhoInit, PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)
-    tov.ComputeTOV()# introducing tov class
-    r = tov.radius #recovering parameters
+    tov = TOV(rhoInit, PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active)# introducing tov class
+    tov.ComputeTOV() #Computing star's parameters
+    r = tov.radius #Recovering parameters
     a = tov.g_tt
     b = tov.g_rr
     phi = tov.Phi
     phi_dot = tov.Psi
     radiusStar = tov.radiusStar
     mass_ADM = tov.massADM / (1.989*10**30) # in solar mass
-    a_dot = (-a[1:-2]+a[2:-1])/(r[2:-1]-r[1:-2]) #computing derivative
+    a_dot = (-a[1:-2]+a[2:-1])/(r[2:-1]-r[1:-2]) #computing derivatives
     b_dot = (-b[1:-2]+b[2:-1])/(r[2:-1]-r[1:-2])
     f_a = -a_dot*r[1:-2]*r[1:-2]/1000
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
     SoS_c_max = np.max(tov.v_c)#defining the speed of sound (should not exceed c/sqrt(3))
-    b_ = 1/(2*np.sqrt(3))
+    b_ = 1/(2*np.sqrt(3)) # Conformal factor
     C = f_b[-1]/f_phi[-1]#parameter that tend to infinity
     #recovering gamma by solving the Second degree equation obtain by analytically solving C
     a1 = 1
     a2 = 4*b_*(C+1)
     a3 = -1
     a4 = a2*a2-4*a1*a3
-    gamma = (-a2-np.sqrt(a4))/(2*a1)
-    r_m = 1000*f_phi[-1]*(1+gamma**2)/(4*b_*gamma)
-    comment = '$L_m = -\\rho$'
-    descr = 'rho'
+    gamma = (-a2-np.sqrt(a4))/(2*a1) # = alpha from Janis Newman Winicour
     D = (1-gamma**2)/(1+gamma**2)#renaming JNW parameter
-    ge = ((D - np.sign(gamma) * 1/np.sqrt(3) * np.sqrt(1-D**2)))/((D +  np.sign(gamma) * 1/np.sqrt(3) * np.sqrt(1-D**2)))# gamma exact
-    ge_theta = tov.Ge_theta# recovering gamma exact computed in TOV class
-    gamma_dev_per = (ge- ge_theta)/ge_theta *100
-    delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3)))**(-2) )
-    delta_theta = tov.Delta_theta
-    delta_dev_per = (delta - delta_theta)/delta_theta * 100
+    ge = ((D - np.sign(gamma) * 1/np.sqrt(3) * np.sqrt(1-D**2)))/((D +  np.sign(gamma) * 1/np.sqrt(3) * np.sqrt(1-D**2)))# gamma exact depending in the scalar charge of JNW solution, Eq(11) (with w=0) of : On the numerical evaluation of the exact PN parameters in BD and ER
+    ge_theta = tov.Ge_theta# Definition depending in the structure of the star. From Eq(70) of : On the numerical evaluation of the exact PN parameters in BD and ER
+    gamma_dev_per = (ge- ge_theta)/ge_theta *100 # deviation between both definition in percent of gamma exact
+    delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3)))**(-2) )# delta exact depending in the scalar charge of JNW solution, Eq(11) (with w=0) of : On the numerical evaluation of the exact PN parameters in BD and ER
+    delta_theta = tov.Delta_theta# Definition depending in the structure of the star. From Eq(70) of : On the numerical evaluation of the exact PN parameters in BD and ER
+    delta_dev_per = (delta - delta_theta)/delta_theta * 100# deviation between both definition in percent of delta exact
     return (b_, D, rho_cen, gamma, ge_theta, delta_theta, gamma_dev_per, delta_dev_per, SoS_c_max)
 
 #function that compute vectors and plot them

@@ -28,7 +28,7 @@ def run(rho_cen, w):
     Npoint = 1000000 #number of points
     log_active = False #True = print star's structure values
     rhoInit = rho_cen*cst.eV*10**6/(cst.c**2*cst.fermi**3)
-    tov = TOV(rhoInit , PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, log_active, w) # introducing tov class
+    tov = TOV(rhoInit , PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint, log_active, w) # introducing tov class and computing star's values
     tov.ComputeTOV_normalization() # Launching TOV numerical integration with the normalization of phi at infinity
     r = tov.radius #recovering parameters
     a = tov.g_tt
@@ -37,29 +37,29 @@ def run(rho_cen, w):
     phi_dot = tov.Psi
     radiusStar = tov.radiusStar
     mass_ADM = tov.massADM / (1.989*10**30) # in solar mass
-    a_dot = (-a[1:-2]+a[2:-1])/(r[2:-1]-r[1:-2]) #computing derivative
+    a_dot = (-a[1:-2]+a[2:-1])/(r[2:-1]-r[1:-2]) #computing derivatives
     b_dot = (-b[1:-2]+b[2:-1])/(r[2:-1]-r[1:-2])
     f_a = -a_dot*r[1:-2]*r[1:-2]/1000
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
-    SoS_c_max = np.max(tov.v_c) #defining the speed of sound (should not exceed c/sqrt(3))
-    b_ = 2/(np.sqrt(3+2*w))
+    SoS_c_max = np.max(tov.v_c) #Defining the speed of sound (should not exceed c/sqrt(3))
+    b_ = 2/(np.sqrt(3+2*w)) # Conformal factor
     C = f_b[-1]/f_phi[-1] #parameter that tend to infinity
     #recovering gamma by solving the Second degree equation obtain by analytically solving C
     a1 = 1
     a2 = b_*(C+1)
     a3 = -1
     a4 = a2*a2-4*a1*a3
-    gamma = (-a2-np.sqrt(a4))/(2*a1)
+    gamma = (-a2-np.sqrt(a4))/(2*a1) # = alpha from Janis Newman Winicour
     D = (1-gamma**2)/(1+gamma**2) #renaming JNW parameter
     g_bd = (1+w)/(2+w) #gamma post-Newtonian in Brans Dicke
-    ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w))/( D + np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w)) # gamma exact
-    ge_theta = tov.Ge_theta # recovering gamma exact computed in TOV class
-    gamma_dev_per = (ge- ge_theta)/ge_theta *100
-    delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3+2*w)))**(-2) )
-    delta_theta = tov.Delta_theta
+    ge = ( D - np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w))/( D + np.sign(gamma)* np.sqrt(1-D**2) * 1/np.sqrt(3+2*w)) # gamma exact depending in the scalar charge of JNW solution from chauvineau:2024prd. Eq(26) (exact PN in Bergman wagoner nordvert theory)
+    ge_theta = tov.Ge_theta # gamma exact written depending in structure of the star, obtain from TOV integration into the code '' TOV ''. Eq.(30) : From chauvineau:2024prd (exact PN in Bergman wagoner nordvert theory)
+    gamma_dev_per = (ge- ge_theta)/ge_theta *100 # deviation in percent between both definition of gamma exact
+    delta = 4/3 * ( ge**2 - 1/4 * (D + np.sign(gamma) * np.sqrt((1-D**2 )/(3+2*w)))**(-2) ) # same for delta parameter. From chauvineau:2024prd Eq(26) : (exact PN in Bergman wagoner nordvert theory)
+    delta_theta = tov.Delta_theta # Definition depending in the structure of the star. From chauvineau:2024prd Eq(30) (exact PN in Bergman wagoner nordvert theory)
     delta_bd = 4/3 * (g_bd)**2 + 4/3 * 1 - g_bd/6 - 3/2 #delta post-Newtonian in Brans Dicke
-    delta_dev_per = (delta - delta_theta)/delta_theta * 100
+    delta_dev_per = (delta - delta_theta)/delta_theta * 100# deviation in percent between both definition of delta exact
     return (b_, D, rho_cen, gamma, g_bd, ge_theta, delta_theta, delta_bd, gamma_dev_per, delta_dev_per, SoS_c_max)
 ###################################################
 
@@ -113,7 +113,7 @@ def compute_gamma(n,w):
 #function that recovers the previously computed vectors to plot them
 def plot_w_vs_rho(lowest_w, highest_w, n, count):
 
-# if count = 0 some files exists
+# if count = 0 : some files exists
     if count==0:
         save_dir = 'saved_matrices_and_plots'
         os.makedirs(save_dir, exist_ok=True)
@@ -125,7 +125,7 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         all_w = os.path.join(save_dir, f'matrice_{n}_w.npy') # all_w contains values of w
         all_rho = os.path.join(save_dir, f'matrice_{n}_rho.npy')# all_rho contains density values
 
-        # Loading existing data
+        # Loading existing data or starting to create them
         if os.path.exists(all_a):
             gamma_edd_all, gamma_BD_all, gamma_dev_per_all, delta_edd_all, delta_BD_all, delta_dev_per_all = np.load(all_a, allow_pickle=True) #loading gamma values
 
