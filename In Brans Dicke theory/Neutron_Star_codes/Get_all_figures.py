@@ -173,18 +173,18 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         gamma_dev_per_all = np.array(gamma_dev_per_all)
         delta_dev_per_all = np.array(delta_dev_per_all)
 
-        print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_all[0])), '%')
-        print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_all[0])), '%')
+        print(f'maximal deviation in percent between both gamma computation = {max(abs(gamma_dev_per_all[0])):.3f}%')
+        print(f'maximal deviation in percent between both delta computation = {max(abs(delta_dev_per_all[0])):.3f}%\n')
 
         dev_gamma_unity =  max(1-gamma_edd_all[0])
-        print('maximal deviation from unity of gamma exact', dev_gamma_unity, '\n')
+        print(f'maximal deviation from unity of gamma exact {dev_gamma_unity:.3f}%')
         dev_delta_unity = max(1-delta_edd_all[0])
-        print('maximal deviation from unity of delta exact', dev_delta_unity, '\n')
+        print(f'maximal deviation from unity of delta exact {dev_delta_unity:.3f}%\n')
 
         rel_dev_gamma =  max(((gamma_edd_all[-1]-gamma_BD_all)[-1]/(1-gamma_BD_all[-1]) ) * 100)
-        print('maximal relative deviation for gamma', rel_dev_gamma, '\n')
+        print(f"maximal relative deviation for gamma {rel_dev_gamma:.3f}%")
         rel_dev_delta = max((((delta_edd_all[-1]-delta_BD_all)[-1]/(1-delta_BD_all[-1]) ) * 100))
-        print('maximal relative deviation for delta', rel_dev_delta)
+        print(f"maximal relative deviation for delta {rel_dev_delta:.3f}%")
 
 #ploting the results
 
@@ -250,18 +250,18 @@ def plot_w_vs_rho(lowest_w, highest_w, n, count):
         w_values = np.load(all_w, allow_pickle=True)[0]
         den_space = np.load(all_rho, allow_pickle=True)[0]
 
-        print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_all[0])), '%')
-        print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_all[0])), '%')
+        print(f'maximal deviation in percent between both gamma computation = {max(abs(gamma_dev_per_all[0])):.3f}%')
+        print(f'maximal deviation in percent between both delta computation = {max(abs(delta_dev_per_all[0])):.3f}%\n')
 
         dev_gamma_unity =  max(1-gamma_edd_all[0])
-        print('maximal deviation from unity of gamma exact', dev_gamma_unity, '\n')
+        print(f'maximal deviation from unity of gamma exact {dev_gamma_unity:.3f}%')
         dev_delta_unity = max(1-delta_edd_all[0])
-        print('maximal deviation from unity of delta exact', dev_delta_unity, '\n')
+        print(f'maximal deviation from unity of delta exact {dev_delta_unity:.3f}%\n')
 
         rel_dev_gamma =  max(((gamma_edd_all[-1]-gamma_BD_all)[-1]/(1-gamma_BD_all[-1]) ) * 100)
-        print('maximal relative deviation for gamma', rel_dev_gamma, '\n')
+        print(f"maximal relative deviation for gamma {rel_dev_gamma:.3f}%")
         rel_dev_delta = max((((delta_edd_all[-1]-delta_BD_all)[-1]/(1-delta_BD_all[-1]) ) * 100))
-        print('maximal relative deviation for delta', rel_dev_delta)
+        print(f"maximal relative deviation for delta {rel_dev_delta:.3f}%")
 
         plt.figure(figsize=(8,6))
         mesh = plt.pcolormesh(den_space, w_values, 1-delta_edd_all, shading='auto', cmap='viridis')

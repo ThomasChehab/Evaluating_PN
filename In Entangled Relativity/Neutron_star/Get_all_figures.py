@@ -93,14 +93,14 @@ def make_gamma_beta_plots(n):
     delta_dev_per_a = delta_dev_per_a[0:index_max]
     comment = '$L_m = -\\rho$'
 
-    print('maximal deviation in percent between both gamma computation =', max(abs(gamma_dev_per_a)), '%')
-    print('maximal deviation in percent between both delta computation =', max(abs(delta_dev_per_a)), '%')
+    print(f'maximal deviation in percent between both gamma computation = {max(abs(gamma_dev_per_a)):.3f}%')
+    print(f'maximal deviation in percent between both delta computation = {max(abs(delta_dev_per_a)):.3f}%\n')
 
-    print('minimal deviation from unity of gamma =', min(1 - (gamma_edd_a))*100, '%')
-    print('minimal deviation from unity of delta =', min(1 - (delta_edd_a))*100, '%')
+    print(f'minimal deviation from unity of gamma = {min(abs(1 - (gamma_edd_a)))*100:.3f}%')
+    print(f'minimal deviation from unity of delta = {min(abs(1 - (delta_edd_a)))*100:.3f}%\n')
 
-    print('maximal deviation from unity of gamma =', max(1 - (gamma_edd_a))*100, '%')
-    print('maximal deviation from unity of delta =', max(1 - (delta_edd_a))*100, '%')
+    print(f'maximal deviation from unity of gamma = {max(abs(1 - (gamma_edd_a)))*100:.3f}%')
+    print(f'maximal deviation from unity of delta = {max(abs(1 - (delta_edd_a)))*100:.3f}%')
 
     #plot 1 - gamma
     fig,ax = plt.subplots()
