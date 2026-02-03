@@ -124,6 +124,30 @@ def evaluate_pdot(n):
     pdot_a = pdot_a[0:index_max]
     mass_ADM_a = mass_ADM_a[0:index_max]
 
+
+    comment = '$L_m = -\\rho$'
+
+    #plot 1 - gamma
+    fig,ax = plt.subplots()
+    plt.xlabel('Central density ($MeV/fm^3$)')
+    ax.plot(den_space,(1-gamma_edd_a), label=f'$1-\\gamma_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$1-\\gamma_e$', fontsize=18)#, color = 'tab:blue')
+    fig.legend( bbox_to_anchor=(0.9, 0.6))
+    plt.savefig(f'./gamma_exact_m.png', dpi = 200,bbox_inches='tight')
+    # plt.show()
+    plt.close()
+
+    #plot 1 - delta :
+    fig,ax = plt.subplots()
+    plt.xlabel('Central density ($MeV/fm^3$)')
+    ax.plot(den_space,(1-delta_edd_a), label=f'$1-\\delta_e$ ({comment})', color = 'tab:blue')
+    ax.set_ylabel('$1-\\delta_e$', fontsize=18)#, color = 'tab:blue')
+    fig.legend( bbox_to_anchor=(0.9, 0.6))
+    plt.savefig(f'./delta_exact_m.png', dpi = 200,bbox_inches='tight')
+    # plt.show()
+    plt.close()
+
+
 #loop that compute the paramaters for SLy EoS
     den_space_SLy = np.linspace(100,2000,num=n) #min max density
 
@@ -175,6 +199,19 @@ def evaluate_pdot(n):
     plt.savefig(f'./pdot_versus_mass.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
+
+
+    print(f'maximal deviation in percent between both gamma computation = {max(abs(gamma_dev_per_a)):.3f}%')
+    print(f'maximal deviation in percent between both delta computation = {max(abs(delta_dev_per_a)):.3f}%\n')
+
+    print(f'minimal deviation from unity of gamma = {min(abs(1 - (gamma_edd_a)))*100:.3f}%')
+    print(f'minimal deviation from unity of delta = {min(abs(1 - (delta_edd_a)))*100:.3f}%\n')
+
+    print(f'maximal deviation from unity of gamma = {max(abs(1 - (gamma_edd_a)))*100:.3f}%')
+    print(f'maximal deviation from unity of delta = {max(abs(1 - (delta_edd_a)))*100:.3f}%')
+
+
+
 
 # #Ploting pdot versus star's mass for polytropic EoS
 #     fig,ax = plt.subplots()

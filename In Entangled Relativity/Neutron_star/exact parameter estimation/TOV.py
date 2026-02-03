@@ -182,6 +182,8 @@ class TOV():
         '''
         if sol.t[-1]<self.radiusMax_in:
             self.pressure = sol.y[0][0:-2]
+            print('pressure', self.pressure)
+            print('density', (self.pressure/k)**(3/5))
             self.mass = sol.y[1][0:-2]
             self.Phi = sol.y[2][0:-2]
             self.v_c = v_sound_c(self.Phi, self.pressure)
@@ -245,9 +247,10 @@ class TOV():
                 print('END')
                 print('===========================================================\n')
 
+            print('RADIUS ETOILE',((self.pressure[0:len(radiusetoile)])/k)**(3/5))
 
             E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)])/k)**(3/5) *c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
-            # print('E_int', E_int)
+            print('E_int', E_int)
             P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)] * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
             theta = 3 * P_int/E_int
             gamma_theta = (1+ theta*(2) + 1/2)/(2 + theta*(1)-1/2)

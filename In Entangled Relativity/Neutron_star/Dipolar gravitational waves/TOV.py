@@ -203,16 +203,17 @@ class TOV():
         y0 = [self.initDensity,self.initMass,self.initPhi,self.initPsi]
         if self.log_active:
             print('y0 = ', y0,'\n')
-        r = np.linspace(10**(-20),self.radiusMax_in,self.Npoint)
+        r_min = 10**(-9)
+        r = np.linspace(r_min,self.radiusMax_in,self.Npoint)
         if self.log_active:
-            print('radius min ',10**(-20))
+            print('radius min ',r_min)
             print('radius max ',self.radiusMax_in)
         stop_condition.terminal = True
         stop_condition.direction = -1
-        sol = solve_ivp(dy_dr, [10**(-20), self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
+        sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
         if sol.t[-1]<self.radiusMax_in:
-            self.pressure = sol.y[0][0:-2]
-            self.pressure_in = self.pressure
+            self.pressure = sol.y[0][0:-2] # le densité
+            self.pressure_in = self.pressure# le densité
             self.mass = sol.y[1][0:-2]
             self.Phi = sol.y[2][0:-2]
             self.Psi = sol.y[3][0:-2]
@@ -224,14 +225,14 @@ class TOV():
             # Value at the radius of star
             self.massStar = sol.y[1][-1]
             self.radiusStar = sol.t[-1]
-            self.pressureStar = sol.y[0][-1]
+            self.pressureStar = sol.y[0][-1]# le densité
             self.phiStar = sol.y[2][-1]
             n_star = len(self.radius)
             if self.log_active:
                 print('Star radius: ', self.radiusStar/1000, ' km')
                 print('Star Mass: ', self.massStar/massSun, ' solar mass')
                 print('Star Mass: ', self.massStar, ' kg')
-                print('Star pressure: ', self.pressureStar, ' Pa\n')
+                print('Star pressure: ', self.pressureStar, ' Pa\n')# le densité
             if self.log_active:
                 print('===========================================================')
                 print('SOLVER OUTSIDE THE STAR')
@@ -271,9 +272,15 @@ class TOV():
                 print('===========================================================\n')
 
 
-            E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)])/k)**(3/5) *c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
+
+#             E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)])/k)**(3/5) *c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
+#             # print('E_int', E_int)
+#             P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)] * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
+#
+#
+            E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)]))*c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
             # print('E_int', E_int)
-            P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)] * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
+            P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)]**(5/3) * k * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
             theta = 3 * P_int/E_int
             gamma_theta = (1+ theta*(2) + 1/2)/(2 + theta*(1)-1/2)
             self.Ge_theta = gamma_theta
