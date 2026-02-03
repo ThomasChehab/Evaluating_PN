@@ -1,0 +1,12 @@
+This code aims to compute the variation in orbital period due to the emission of dipolar gravitationel waves as predicted by Entangled Relativity in a system composed of a pulsar and a white dwarf. This is achieved by solving the modified TOV equations.
+
+To launch the code, download everything from the GitHub repository. Then, you need to install the packages listed in the requirements.txt file.
+
+Then, in a terminal run :
+
+" python3 Get_all_figures.py " 
+
+This command will execute the code and generate one figure representinf the variation of the orbital period pdot versus the predicted mass depending in two equation of state. See ... for more information.
+
+
+This plot figure 7 of the paper ... . The code runs in some minutes.

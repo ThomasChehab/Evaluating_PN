@@ -40,8 +40,8 @@ def Lagrangian(rho, option, option_eqs):
 
 
 # # # def v_sound_c(rho):
-# def v_sound_c(Phi, P):
-#     return np.sqrt(5/3 * k * (RhoEQS(P)**(2/3)) / cst.c
+def v_sound_c(option_eqs, rho):
+    return np.sqrt(PEQS(rho, option_eqs)[1]) / cst.c
 
 #Equation for b
 def b(r, m):
@@ -203,15 +203,13 @@ class TOV():
         y0 = [self.initDensity,self.initMass,self.initPhi,self.initPsi]
         if self.log_active:
             print('y0 = ', y0,'\n')
-        r = np.linspace(10**(-15),self.radiusMax_in,self.Npoint)
+        r = np.linspace(10**(-20),self.radiusMax_in,self.Npoint)
         if self.log_active:
-            print('radius min ',10**(-15))
+            print('radius min ',10**(-20))
             print('radius max ',self.radiusMax_in)
         stop_condition.terminal = True
         stop_condition.direction = -1
-        sol = solve_ivp(dy_dr, [10**(-15), self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
-        # sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45',t_eval=r ,args=(self.option,self.dilaton_active, self.option_eqs))
-
+        sol = solve_ivp(dy_dr, [10**(-20), self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
         if sol.t[-1]<self.radiusMax_in:
             self.pressure = sol.y[0][0:-2]
             self.pressure_in = self.pressure
@@ -220,7 +218,7 @@ class TOV():
             self.Psi = sol.y[3][0:-2]
             self.radius = sol.t[0:-2]
             #
-            # self.v_c = v_sound_c(self.Phi, self.pressure)
+            self.v_c = v_sound_c(self.option_eqs, self.initDensity)
             #
             self.r_in = self.radius
             # Value at the radius of star

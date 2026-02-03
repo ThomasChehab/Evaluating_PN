@@ -43,7 +43,7 @@ def run(rho_cen, EoS):
     f_a = -a_dot*r[1:-2]*r[1:-2]/1000
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
-    SoS_c_max = 0#np.max(tov.v_c)#defining the speed of sound (should not exceed c/sqrt(3))
+    SoS_c_max = np.max(tov.v_c)#defining the speed of sound (should not exceed c/sqrt(3))
     b_ = 1/(2*np.sqrt(3)) # Conformal factor
     C = f_b[-1]/f_phi[-1]#parameter that tend to infinity
     #recovering gamma by solving the Second degree equation obtain by analytically solving C
@@ -84,7 +84,7 @@ def run(rho_cen, EoS):
 def evaluate_pdot(n):
 
     nspace = n #number of iteration
-    den_space = np.linspace(100,1600,num=n) #min max density
+    den_space = np.linspace(100,2000,num=n) #min max density
     beta_vec = np.array([])
     vsurc_a = np.array([])
     gamma_edd_a = np.array([])
@@ -115,18 +115,19 @@ def evaluate_pdot(n):
         pdot_a = np.append(pdot_a,pdot)
         mass_ADM_a = np.append(mass_ADM_a, mass_ADM)
 
-    # index_max = np.where(vsurc_a > 1/np.sqrt(3))[0][0] #imposing sound speed not to exceed c/sqrt(3)
-    # den_space = den_space[0:index_max]
-    # print('densité max', den_space[-1])
-    # gamma_edd_a = gamma_edd_a[0:index_max]
-    # delta_edd_a = delta_edd_a[0:index_max]
-    # gamma_dev_per_a = gamma_dev_per_a[0:index_max]
-    # delta_dev_per_a = delta_dev_per_a[0:index_max]
-    # pdot_a = pdot_a[0:index_max]
-    # mass_ADM_a = mass_ADM_a[0:index_max]
+    index_max = np.where(vsurc_a > 1/np.sqrt(3))[0][0] #imposing sound speed not to exceed c/sqrt(3)
+    den_space = den_space[0:index_max]
+    gamma_edd_a = gamma_edd_a[0:index_max]
+    delta_edd_a = delta_edd_a[0:index_max]
+    gamma_dev_per_a = gamma_dev_per_a[0:index_max]
+    delta_dev_per_a = delta_dev_per_a[0:index_max]
+    pdot_a = pdot_a[0:index_max]
+    mass_ADM_a = mass_ADM_a[0:index_max]
 
 #loop that compute the paramaters for SLy EoS
-    for den in den_space:
+    den_space_SLy = np.linspace(100,2000,num=n) #min max density
+
+    for den in den_space_SLy:
         gamma_SLy, ge_SLy, de_SLy, gamma_dev_SLy, delta_dev_SLy, vsurc_SLy, pdot_SLy, mass_ADM_SLy  = run(den, 1)
 
         vsurc_a_SLy = np.append(vsurc_a_SLy,vsurc_SLy)
@@ -137,16 +138,14 @@ def evaluate_pdot(n):
         pdot_a_SLy = np.append(pdot_a_SLy,pdot_SLy)
         mass_ADM_a_SLy = np.append(mass_ADM_a_SLy, mass_ADM_SLy)
 
-    #
-    # index_max_SLy = np.where(vsurc_a_SLy > 1/np.sqrt(3))[0][0] #imposing sound speed not to exceed c/sqrt(3)
-    # den_space = den_space[0:index_max]
-    # print('densité max', den_space[-1])
-    # gamma_edd_a_SLy = gamma_edd_a_SLy[0:index_max]
-    # delta_edd_a_SLy = delta_edd_a_SLy[0:index_max]
-    # gamma_dev_per_a_SLy = gamma_dev_per_a_SLy[0:index_max]
-    # delta_dev_per_a_SLy = delta_dev_per_a_SLy[0:index_max]
-    # pdot_a_SLy = pdot_a_SLy[0:index_max]
-    # mass_ADM_a_SLy = mass_ADM_a_SLy[0:index_max]
+    index_max_SLy = np.where(vsurc_a_SLy > 1/np.sqrt(3))[0][0] #imposing sound speed not to exceed c/sqrt(3)
+    den_space_SLy = den_space_SLy[0:index_max_SLy]
+    gamma_edd_a_SLy = gamma_edd_a_SLy[0:index_max_SLy]
+    delta_edd_a_SLy = delta_edd_a_SLy[0:index_max_SLy]
+    gamma_dev_per_a_SLy = gamma_dev_per_a_SLy[0:index_max_SLy]
+    delta_dev_per_a_SLy = delta_dev_per_a_SLy[0:index_max_SLy]
+    pdot_a_SLy = pdot_a_SLy[0:index_max_SLy]
+    mass_ADM_a_SLy = mass_ADM_a_SLy[0:index_max_SLy]
 
 
     #imposing minimal value of 1 solar mass
@@ -166,7 +165,7 @@ def evaluate_pdot(n):
     delta_dev_per_a_SLy = delta_dev_per_a_SLy[index_mass_SLy:-1]
     pdot_a_SLy = pdot_a_SLy[index_mass_SLy:-1]
 
-
+#Ploting pdot versus star's mass for both EoS
     fig,ax = plt.subplots()
     plt.xlabel('Star mass ($M_\odot$)')
     ax.plot(mass_ADM_a,pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
@@ -177,37 +176,39 @@ def evaluate_pdot(n):
     # plt.show()
     plt.close()
 
+# #Ploting pdot versus star's mass for polytropic EoS
+#     fig,ax = plt.subplots()
+#     plt.xlabel('Star mass ($M_\odot$)')
+#     ax.plot(mass_ADM_a,pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
+#     # ax.plot(mass_ADM_a_SLy,pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
+#     ax.set_ylabel('$\dot{P}^D$', fontsize=18)
+#     plt.legend()
+#     plt.savefig(f'./pdot_versus_mass_only_polytrop.png', dpi = 200,bbox_inches='tight')
+#     # plt.show()
+#     plt.close()
 
-    fig,ax = plt.subplots()
-    plt.xlabel('Star mass ($M_\odot$)')
-    ax.plot(mass_ADM_a,pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
-    # ax.plot(mass_ADM_a_SLy,pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
-    ax.set_ylabel('$\dot{P}^D$', fontsize=18)
-    plt.legend()
-    plt.savefig(f'./pdot_versus_mass_only_polytrop.png', dpi = 200,bbox_inches='tight')
-    # plt.show()
-    plt.close()
 
+# #Ploting pdot versus code density for both EoS
+#     fig,ax = plt.subplots()
+#     plt.xlabel(f'Core density $Mev/fm^3$')
+#     ax.plot(den_space[0:len(pdot_a)],pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
+#     ax.plot(den_space[0:len(pdot_a_SLy)],pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
+#     ax.set_ylabel('$\dot{P}^D$', fontsize=18)
+#     plt.legend()
+#     plt.savefig(f'./pdot_versus_density.png', dpi = 200,bbox_inches='tight')
+#     # plt.show()
+#     plt.close()
 
-
-    fig,ax = plt.subplots()
-    plt.xlabel(f'Core density $Mev/fm^3$')
-    ax.plot(den_space[0:len(pdot_a)],pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
-    ax.plot(den_space[0:len(pdot_a_SLy)],pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
-    ax.set_ylabel('$\dot{P}^D$', fontsize=18)
-    plt.legend()
-    plt.savefig(f'./pdot_versus_density.png', dpi = 200,bbox_inches='tight')
-    # plt.show()
-    plt.close()
-
+# defining minimal and maximal index values
     min_index = np.argmin(pdot_a)
     min_value = pdot_a[min_index]
 
     max_index = np.argmax(pdot_a)
     max_value = pdot_a[max_index]
 
-# remainder, we took minimal when maximal because pdot is negative. Its not false but just to enhance the comprehension.
+# reminder, we took minimal when maximal because pdot is negative. Its not false but just to enhance the comprehension.
     print('\nFor a polytropic equation of state :')
+    print('Maximal core density', den_space[-1],'\n')
     print(f"Maximal pdot = {min_value:.3e}")
     print(f'Mass associated to maximal pdot = {mass_ADM_a[min_index]:.3f} solar mass\n')
 
@@ -222,6 +223,7 @@ def evaluate_pdot(n):
     max_index_SLy = np.argmax(pdot_a_SLy)
     max_value_SLy = pdot_a_SLy[max_index_SLy]
     print('For a piece wise equation of state :')
+    print('Maximal core density', den_space_SLy[-1],'\n')
     print(f"Maximal pdot = {min_value_SLy:.3e}")
     print(f'Mass associated to maximal pdot = {mass_ADM_a_SLy[min_index_SLy]:.3f} solar mass\n')
 

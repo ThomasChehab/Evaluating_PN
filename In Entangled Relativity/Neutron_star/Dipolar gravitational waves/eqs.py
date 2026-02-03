@@ -53,7 +53,7 @@ def eqs_SLy(rho, coef):
 def PEQS(rho, option_eqs):
     if option_eqs == 0:
         P = k*rho**(5/3)
-        dP_drho = (5/3)*k*rho**(5/3-1)
+        dP_drho = (5/3)*k*rho**(2/3)
     elif option_eqs == 1:
         a1 = 6.22
         a2 = 6.121
