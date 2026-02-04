@@ -73,14 +73,14 @@ def run(rho_cen, EoS):
     alpha_p = (2*gamma)/(1-gamma**2)
     csts = - 2 * cst.pi* n_b * Gstar* Mc *cst.c**(-3) * q/(q+1) * ((1+(e**2)/2)/(1 - e**2)**(5/2))
     # csts = - 2 * cst.pi* n_b *T * mc * q/(q+1) * ((1+(e**2)/2)/(1 - e**2)**(5/2))
-    pdot = csts * alpha_p**2
+    pdot = csts * alpha_p**2 # variation of the orbital period Eq.(21) of 2012MNRAS.423.3328F
 
     return (gamma, ge_theta, delta_theta, gamma_dev_per, delta_dev_per, SoS_c_max, pdot, mass_ADM)
 
 
 # run(1578)
 
-#function that compute vectors and plot them
+#function that compute vectors and plot them. There are 2 different type depending in the two EoS studied (polytrope or SLy)
 def evaluate_pdot(n):
 
     nspace = n #number of iteration
@@ -123,10 +123,9 @@ def evaluate_pdot(n):
     delta_dev_per_a = delta_dev_per_a[0:index_max]
     pdot_a = pdot_a[0:index_max]
     mass_ADM_a = mass_ADM_a[0:index_max]
-
-
     comment = '$L_m = -\\rho$'
 
+    #Ploting the exact parameters
     #plot 1 - gamma
     fig,ax = plt.subplots()
     plt.xlabel('Central density ($MeV/fm^3$)')
@@ -146,7 +145,6 @@ def evaluate_pdot(n):
     plt.savefig(f'./delta_exact_m.png', dpi = 200,bbox_inches='tight')
     # plt.show()
     plt.close()
-
 
 #loop that compute the paramaters for SLy EoS
     den_space_SLy = np.linspace(100,2000,num=n) #min max density
@@ -200,41 +198,19 @@ def evaluate_pdot(n):
     # plt.show()
     plt.close()
 
+    print('===========================================================')
+    print('EXACT POST NEWTONIAN PARAMETERS')
+    print('===========================================================\n')
 
-    print(f'maximal deviation in percent between both gamma computation = {max(abs(gamma_dev_per_a)):.3f}%')
-    print(f'maximal deviation in percent between both delta computation = {max(abs(delta_dev_per_a)):.3f}%\n')
-
+    print(f'maximal deviation in percent between both gamma computation = {max(abs(gamma_dev_per_a)):.3f}%\n')
     print(f'minimal deviation from unity of gamma = {min(abs(1 - (gamma_edd_a)))*100:.3f}%')
-    print(f'minimal deviation from unity of delta = {min(abs(1 - (delta_edd_a)))*100:.3f}%\n')
-
-    print(f'maximal deviation from unity of gamma = {max(abs(1 - (gamma_edd_a)))*100:.3f}%')
-    print(f'maximal deviation from unity of delta = {max(abs(1 - (delta_edd_a)))*100:.3f}%')
+    print(f'maximal deviation from unity of gamma = {max(abs(1 - (gamma_edd_a)))*100:.3f}%\n')
 
 
+    print(f'maximal deviation in percent between both delta computation = {max(abs(delta_dev_per_a)):.3f}%\n')
+    print(f'minimal deviation from unity of delta = {min(abs(1 - (delta_edd_a)))*100:.3f}%')
+    print(f'maximal deviation from unity of delta = {max(abs(1 - (delta_edd_a)))*100:.3f}%\n')
 
-
-# #Ploting pdot versus star's mass for polytropic EoS
-#     fig,ax = plt.subplots()
-#     plt.xlabel('Star mass ($M_\odot$)')
-#     ax.plot(mass_ADM_a,pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
-#     # ax.plot(mass_ADM_a_SLy,pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
-#     ax.set_ylabel('$\dot{P}^D$', fontsize=18)
-#     plt.legend()
-#     plt.savefig(f'./pdot_versus_mass_only_polytrop.png', dpi = 200,bbox_inches='tight')
-#     # plt.show()
-#     plt.close()
-
-
-# #Ploting pdot versus code density for both EoS
-#     fig,ax = plt.subplots()
-#     plt.xlabel(f'Core density $Mev/fm^3$')
-#     ax.plot(den_space[0:len(pdot_a)],pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
-#     ax.plot(den_space[0:len(pdot_a_SLy)],pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
-#     ax.set_ylabel('$\dot{P}^D$', fontsize=18)
-#     plt.legend()
-#     plt.savefig(f'./pdot_versus_density.png', dpi = 200,bbox_inches='tight')
-#     # plt.show()
-#     plt.close()
 
 # defining minimal and maximal index values
     min_index = np.argmin(pdot_a)
@@ -243,8 +219,12 @@ def evaluate_pdot(n):
     max_index = np.argmax(pdot_a)
     max_value = pdot_a[max_index]
 
+    print('===========================================================')
+    print('VARIATION IN ORBITAL PERIOD')
+    print('===========================================================\n')
+
 # reminder, we took minimal when maximal because pdot is negative. Its not false but just to enhance the comprehension.
-    print('\nFor a polytropic equation of state :')
+    print('For a polytropic equation of state :')
     print('Maximal core density', den_space[-1],'\n')
     print(f"Maximal pdot = {min_value:.3e}")
     print(f'Mass associated to maximal pdot = {mass_ADM_a[min_index]:.3f} solar mass\n')
@@ -269,4 +249,4 @@ def evaluate_pdot(n):
     print(f'Mass associated to minimal pdot = {mass_ADM_a_SLy[max_index_SLy]:.3f} solar mass')
 
 
-evaluate_pdot(300)
+evaluate_pdot(900)

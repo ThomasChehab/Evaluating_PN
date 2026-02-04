@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-"""
-TOV equation solver in the context of Entangled Relativity (ER).
-Based on "Compact Objects in Entangled Relativity" (2011.14629.pdf).
-"""
 from eqs import *
 import scipy.constants as cst
 import matplotlib
@@ -38,8 +33,7 @@ def Lagrangian(rho, option, option_eqs):
     else:
         print('not a valid option')
 
-
-# # # def v_sound_c(rho):
+#Speed of sound
 def v_sound_c(option_eqs, rho):
     return np.sqrt(PEQS(rho, option_eqs)[1]) / cst.c
 
@@ -77,12 +71,12 @@ def bdotb(r, rho, m, Psi, Phi, option, option_eqs):
     C = b(r,m)*r*(-D00(r, rho, m, Psi, Phi, option, option_eqs)+kappa*c2*rho*Phi**(-1/2))
     return A+B+C  # Eq (10) in 2011.14629.pdf
 
-#Equation for dP/dr
+#Equation for drho/dr
 def f1(r, rho, m, Psi, Phi, option, option_eqs):
     ADOTA = adota(r, rho, m, Psi, Phi, option_eqs)
     Lm = Lagrangian(rho, option, option_eqs)
     P, dP_drho = PEQS(rho, option_eqs)
-    return (-(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P))/dP_drho # Eq (20) in 2011.14629.pdf
+    return (-(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P))/dP_drho
 
 #Equation for dm/dr
 def f2(r, rho, m, Psi, Phi, option, option_eqs):
@@ -174,8 +168,8 @@ class TOV():
         self.radiusStar = 0
         self.phiStar = 0
 #Output data
-        self.pressure_in = 0
-        self.pressure = 0
+        self.density_in = 0
+        self.density = 0
         self.mass = 0
         self.Phi = 0
         self.Psi = 0
@@ -203,7 +197,7 @@ class TOV():
         y0 = [self.initDensity,self.initMass,self.initPhi,self.initPsi]
         if self.log_active:
             print('y0 = ', y0,'\n')
-        r_min = 10**(-9)
+        r_min = 10**(-15) # if too low, bugs appears in the plots
         r = np.linspace(r_min,self.radiusMax_in,self.Npoint)
         if self.log_active:
             print('radius min ',r_min)
@@ -212,27 +206,25 @@ class TOV():
         stop_condition.direction = -1
         sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
         if sol.t[-1]<self.radiusMax_in:
-            self.pressure = sol.y[0][0:-2] # le densité
-            self.pressure_in = self.pressure# le densité
+            self.density = sol.y[0][0:-2] # le densité
+            self.density_in = self.density# le densité
             self.mass = sol.y[1][0:-2]
             self.Phi = sol.y[2][0:-2]
             self.Psi = sol.y[3][0:-2]
             self.radius = sol.t[0:-2]
-            #
             self.v_c = v_sound_c(self.option_eqs, self.initDensity)
-            #
             self.r_in = self.radius
             # Value at the radius of star
             self.massStar = sol.y[1][-1]
             self.radiusStar = sol.t[-1]
-            self.pressureStar = sol.y[0][-1]# le densité
+            self.densityStar = sol.y[0][-1]# le densité
             self.phiStar = sol.y[2][-1]
             n_star = len(self.radius)
             if self.log_active:
                 print('Star radius: ', self.radiusStar/1000, ' km')
                 print('Star Mass: ', self.massStar/massSun, ' solar mass')
                 print('Star Mass: ', self.massStar, ' kg')
-                print('Star pressure: ', self.pressureStar, ' Pa\n')# le densité
+                print('Star density: ', self.densityStar, ' Pa\n')# le densité
             if self.log_active:
                 print('===========================================================')
                 print('SOLVER OUTSIDE THE STAR')
@@ -245,17 +237,15 @@ class TOV():
                 print('radius min ',self.radiusStar)
                 print('radius max ',self.radiusMax_out)
             sol = solve_ivp(dy_dr_out, [r[0], self.radiusMax_out], y0,method='DOP853', t_eval=r, args=(0,self.option,self.dilaton_active, self.option_eqs))
-            self.pressure = np.concatenate([self.pressure, np.zeros(self.Npoint)])
+            self.density = np.concatenate([self.density, np.zeros(self.Npoint)])
             self.mass = np.concatenate([self.mass, sol.y[0]])
             self.Phi = np.concatenate([self.Phi, sol.y[1]])
             self.Psi = np.concatenate([self.Psi,  sol.y[2]])
-            ##
-            radiusetoile = self.radius
-            ##
+            radius_in_star = self.radius # contains radius in the star
             self.radius = np.concatenate([self.radius, r])
             # Compute metrics
             self.g_rr = b(self.radius, self.mass)
-            a_dot_a = adota(self.radius, self.pressure, self.mass, self.Psi, self.Phi, self.option_eqs)
+            a_dot_a = adota(self.radius, self.density, self.mass, self.Psi, self.Phi, self.option_eqs)
             self.g_tt = np.exp(np.concatenate([[0.0], integcum(a_dot_a,self.radius)])-integ(a_dot_a,self.radius))
             self.phi_inf = self.Phi[-1]
             if self.log_active:
@@ -271,24 +261,19 @@ class TOV():
                 print('END')
                 print('===========================================================\n')
 
-
-
-#             E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)])/k)**(3/5) *c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
-#             # print('E_int', E_int)
-#             P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)] * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
-#
-#
-            E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)]))*c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
-            # print('E_int', E_int)
-            P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)]**(5/3) * k * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
+            #computation of exact parameter using TOV output data
+            #Internal Energy density computation
+            E_int = kappa/3 * simps(radius_in_star**2 * np.sqrt( self.g_tt[0:len(radius_in_star)] * self.g_rr[0:len(radius_in_star)] ) * (((self.density[0:len(radius_in_star)]))*c2) * np.sqrt(self.Phi[0:len(radius_in_star)]) , radius_in_star )
+            #Internal pressure computation
+            P_int = kappa/3 * simps(radius_in_star**2 * np.sqrt( self.g_tt[0:len(radius_in_star)] * self.g_rr[0:len(radius_in_star)] ) * self.density[0:len(radius_in_star)]**(5/3) * k * np.sqrt(self.Phi[0:len(radius_in_star)]), radius_in_star)
+            #computing their ration
             theta = 3 * P_int/E_int
+            #computing exact parameter according to Eq.() of
             gamma_theta = (1+ theta*(2) + 1/2)/(2 + theta*(1)-1/2)
             self.Ge_theta = gamma_theta
-
+            #computing exact parameter according to Eq.() of
             delta_theta = 4/3 * (gamma_theta**2 - 1/4 * ((3+2*theta)/((9*(1+theta)**2) + 3 * theta**2)**(1/2) )**(-2))
-
             self.Delta_theta = delta_theta
-
         else:
             print('Pressure=0 not reached')
 
