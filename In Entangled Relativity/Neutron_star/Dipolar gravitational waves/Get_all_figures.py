@@ -160,6 +160,13 @@ def evaluate_pdot(n):
         pdot_a_SLy = np.append(pdot_a_SLy,pdot_SLy)
         mass_ADM_a_SLy = np.append(mass_ADM_a_SLy, mass_ADM_SLy)
 
+
+    index_max_SLy_c = np.where(vsurc_a_SLy > 1)[0][0] #imposing sound speed not to exceed c
+    vsurc_a_SLy_c = vsurc_a_SLy[0:index_max_SLy_c]
+    pdot_a_SLy_c = pdot_a_SLy[0:index_max_SLy_c]
+    mass_ADM_a_SLy_c = mass_ADM_a_SLy[0:index_max_SLy_c]
+
+
     index_max_SLy = np.where(vsurc_a_SLy > 1/np.sqrt(3))[0][0] #imposing sound speed not to exceed c/sqrt(3)
     den_space_SLy = den_space_SLy[0:index_max_SLy]
     gamma_edd_a_SLy = gamma_edd_a_SLy[0:index_max_SLy]
@@ -187,11 +194,19 @@ def evaluate_pdot(n):
     delta_dev_per_a_SLy = delta_dev_per_a_SLy[index_mass_SLy:-1]
     pdot_a_SLy = pdot_a_SLy[index_mass_SLy:-1]
 
+    index_mass_SLy_c = np.where(mass_ADM_a_SLy_c > 1 )[0][0]
+    vsurc_a_SLy_c = vsurc_a_SLy_c[index_mass_SLy_c:-1]
+    pdot_a_SLy_c = pdot_a_SLy_c[index_mass_SLy_c:-1]
+    mass_ADM_a_SLy_c = mass_ADM_a_SLy_c[index_mass_SLy_c:-1]
+
+
+
 #Ploting pdot versus star's mass for both EoS
     fig,ax = plt.subplots()
     plt.xlabel('Star mass ($M_\odot$)')
-    ax.plot(mass_ADM_a,pdot_a, label=f'$\dot P^D$ polytrop', color = 'tab:blue')
-    ax.plot(mass_ADM_a_SLy,pdot_a_SLy, label=f'$\dot P^D$ SLy', color = 'tab:brown')
+    ax.plot(mass_ADM_a,pdot_a, label=r'$\dot P^D$ polytrop $v_s < c/\sqrt{3}$', color = 'tab:blue')
+    ax.plot(mass_ADM_a_SLy,pdot_a_SLy, label=r'$\dot P^D$ SLy $v_s < c/\sqrt{3}$', color = 'tab:brown')
+    ax.plot(mass_ADM_a_SLy_c,pdot_a_SLy_c,linestyle='dashed', label=f'$\dot P^D$ SLy $v_s < c$', color = 'tab:brown')
     ax.set_ylabel('$\dot{P}^D$', fontsize=18)
     plt.legend()
     plt.savefig(f'./pdot_versus_mass.png', dpi = 200,bbox_inches='tight')
@@ -249,4 +264,4 @@ def evaluate_pdot(n):
     print(f'Mass associated to minimal pdot = {mass_ADM_a_SLy[max_index_SLy]:.3f} solar mass')
 
 
-evaluate_pdot(900)
+evaluate_pdot(300)
