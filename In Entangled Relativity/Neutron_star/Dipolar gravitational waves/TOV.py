@@ -118,6 +118,82 @@ def dy_dr_out(r, y, rho, option, dilaton_active, option_eqs):
     dy_dt = [f2(r, rho, M, Psi, Phi, option, option_eqs),f3(r, rho, M, Psi, Phi, option, dilaton_active),f4(r, rho, M, Psi, Phi, option, dilaton_active, option_eqs) ]
     return dy_dt
 
+#######################################""
+#Equations in order to compute the second integral with P as the radial variable
+
+#Equation for dr/drho
+def drdrho(r, rho, m, Psi, Phi, option, option_eqs):
+    ADOTA = adota(r, rho, m, Psi, Phi, option_eqs)
+    Lm = Lagrangian(rho, option, option_eqs)
+    P, dP_drho = PEQS(rho, option_eqs)
+    return ((-(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P))/dP_drho)**(-1)
+
+
+#Equation for dm/drho
+def dmdrho(r, rho, m, Psi, Phi, option, option_eqs):
+    P, dP_drho = PEQS(rho, option_eqs)
+    A = 4*np.pi*rho*(Phi**(-1/2))*r**2
+    Lm = Lagrangian(rho, option, option_eqs)
+    B = 4*np.pi*(-D00(r, rho, m, Psi, Phi, option, option_eqs)/(kappa*c2))*r**2
+    ADOTA = adota(r, rho, m, Psi, Phi, option_eqs)
+    drhodr = (-(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P))/dP_drho
+    return (A+B)/drhodr  # Eq (23) in 2011.14629.pdf
+
+
+#Equation for dPhi/drho
+def dphidrho(r, rho, m, Psi, Phi, option, dilaton_active, option_eqs):
+    Lm = Lagrangian(rho, option, option_eqs)
+    P, dP_drho = PEQS(rho, option_eqs)
+    ADOTA = adota(r, rho, m, Psi, Phi, option_eqs)
+    drhodr = (-(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P))/dP_drho
+    if dilaton_active:
+        return Psi/drhodr # Eq (24) in 2011.14629.pdf
+    else:
+        return 0
+
+#Equation for dPsi/drho
+def dPsidrho(r, rho, m, Psi, Phi, option, dilaton_active, option_eqs):
+    ADOTA = adota(r, rho, m, Psi, Phi, option_eqs)
+    BDOTB = bdotb(r, rho, m, Psi, Phi, option, option_eqs)
+    P, dP_drho = PEQS(rho, option_eqs)
+    Lm = Lagrangian(rho, option, option_eqs)
+    T = -c2*rho + 3*P
+    A = (-Psi/2)*(ADOTA-BDOTB+4/r)
+    B = b(r,m)*kappa*Phi**(1/2)*(T-Lm)/3
+    drhodr = (-(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P))/dP_drho
+    if dilaton_active:
+        return (A+B)/drhodr  # Eq (21) in 2011.14629.pdf
+    else:
+        return 0
+
+#Define for dy/drho
+def dy_drho(rho, y, option, dilaton_active, option_eqs):
+    r, M, Phi, Psi = y
+    dy_dt = [drdrho(r, rho, M, Psi, Phi, option, option_eqs), dmdrho(r, rho, M, Psi, Phi, option, option_eqs),dphidrho(r, rho, M, Psi, Phi, option, dilaton_active, option_eqs),dPsidrho(r, rho, M, Psi, Phi, option, dilaton_active, option_eqs) ]
+    return dy_dt
+
+#performing a change of variable such that x = ln(rho)
+#easier to integrate
+def drdx(x, r, m, Psi, Phi, option, option_eqs):
+    rho = np.exp(x)
+    return rho * drdrho(r, rho, m, Psi, Phi, option, option_eqs)
+
+def dmdx(x, r, m, Psi, Phi, option, option_eqs):
+    rho = np.exp(x)
+    return rho * dmdrho(r, rho, m, Psi, Phi, option, option_eqs)
+
+def dPhidx(x, r, m, Psi, Phi, option, dilaton_active, option_eqs):
+    rho = np.exp(x)
+    return rho * dphidrho(r, rho, m, Psi, Phi, option, dilaton_active, option_eqs)
+
+def dPsidx(x, r, m, Psi, Phi, option, dilaton_active, option_eqs):
+    rho = np.exp(x)
+    return rho * dPsidrho(r, rho, m, Psi, Phi,option, dilaton_active, option_eqs)
+
+def dy_dx(x, y, option, dilaton_active, option_eqs):
+    r, M, Phi, Psi = y
+    return [drdx(x, r, M, Psi, Phi, option, option_eqs), dmdx(x, r, M, Psi, Phi, option, option_eqs), dPhidx(x, r, M, Psi, Phi, option, dilaton_active, option_eqs), dPsidx(x, r, M, Psi, Phi, option, dilaton_active, option_eqs)]
+
 class TOV():
     """
     * Initialization
@@ -182,6 +258,48 @@ class TOV():
         self.r_in = 0
         self.phi_inf = 0
 
+    def finding_pressure_vanishes(self):
+
+        #initial values for integration
+        y0 = [self.Radius_Last, self.Mass_Last, self.Phi_Last, self.Psi_Last]
+        #minimal density value
+        density_min = 10**(-10)
+
+        #initial x value
+        x0 = np.log(self.density_Last)
+        #minimal x value
+        xmin = np.log(density_min)
+        #linspace of values of x for integration
+        x_eval = np.linspace(x0, xmin, self.Npoint)
+        #integrating differential equation with variable x
+        sol = solve_ivp(
+            dy_dx,
+            [x0, xmin],
+            y0,
+            t_eval=x_eval,
+            method='RK45',
+            args=(self.option, self.dilaton_active, self.option_eqs)
+        )
+
+        density = np.exp(sol.t) # recovering density from x = ln(rho)
+
+        # recovering different parameter
+        self.density = np.exp(sol.t[:-2]) # taking exp because code return x = ln(rho)
+        self.radius = sol.y[0][:-2]
+        self.mass = sol.y[1][:-2]
+        self.Phi = sol.y[2][:-2]
+        self.Psi = sol.y[3][:-2]
+        self.pressure = k * (self.density)**(5/3)
+
+        self.densityStar = sol.t[-1]
+        self.radiusStar = sol.y[0][-1]
+        self.massStar = sol.y[1][-1]
+        self.PhiStar = sol.y[2][-1]
+        self.PsiStar = sol.y[3][-1]
+        self.pressureStar = k * self.densityStar**(5/3)
+
+        return self.density, self.radius, self.mass, self.Phi, self.Psi, self.pressure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar
+
     def Compute(self):
         if self.log_active:
             print('===========================================================')
@@ -205,20 +323,38 @@ class TOV():
         stop_condition.terminal = True
         stop_condition.direction = -1
         sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
-        if sol.t[-1]<self.radiusMax_in:
-            self.density = sol.y[0][0:-2] # le densité
-            self.density_in = self.density# le densité
-            self.mass = sol.y[1][0:-2]
-            self.Phi = sol.y[2][0:-2]
-            self.Psi = sol.y[3][0:-2]
-            self.radius = sol.t[0:-2]
+
+
+
+        self.Radius_frst = sol.t[:]
+        self.density_frst = sol.y[0][:]
+        self.pressure_frst = k * (self.density_frst)**(5/3)
+        self.Mass_frst = sol.y[1][:]
+        self.Phi_frst = sol.y[2][:]
+        self.Psi_frst = sol.y[3][:]
+
+        self.Radius_Last = sol.t[-1]
+        self.density_Last = sol.y[0][-1]
+        self.pressure_Last = k * (self.density_Last)**(5/3)
+        self.Mass_Last = sol.y[1][-1]
+        self.Phi_Last = sol.y[2][-1]
+        self.Psi_Last = sol.y[3][-1]
+
+
+        #Functions that compute the second integral in order to find lowest pressure
+        self.density, self.radius, self.mass, self.Phi, self.Psi, self.presure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar = self.finding_pressure_vanishes()
+
+#############
+#here we concatenate values from previous integration to new ones
+        if self.radiusStar<self.radiusMax_in:
+            self.radius = np.concatenate([self.Radius_frst, self.radius])
+            self.density = np.concatenate([self.density_frst, self.density])
+            self.mass = np.concatenate([self.Mass_frst, self.mass])
+            self.Phi = np.concatenate([self.Phi_frst, self.Phi])
+            self.Psi = np.concatenate([self.Psi_frst, self.Psi])
+            self.pressure = np.concatenate([self.pressure_frst, self.pressure])
             self.v_c = v_sound_c(self.option_eqs, self.initDensity)
-            self.r_in = self.radius
-            # Value at the radius of star
-            self.massStar = sol.y[1][-1]
-            self.radiusStar = sol.t[-1]
-            self.densityStar = sol.y[0][-1]# le densité
-            self.phiStar = sol.y[2][-1]
+#############
             n_star = len(self.radius)
             if self.log_active:
                 print('Star radius: ', self.radiusStar/1000, ' km')

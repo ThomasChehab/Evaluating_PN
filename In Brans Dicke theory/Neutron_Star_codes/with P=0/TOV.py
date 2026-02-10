@@ -10,11 +10,9 @@ from scipy.integrate import solve_ivp
 from scipy.integrate import cumulative_trapezoid as integcum
 from scipy.integrate import trapezoid as integ
 import os
-# import mplhep as hep
-# hep.style.use("ATLAS")
 import csv
 from scipy.integrate import simpson as simps
-import math
+
 c2 = cst.c**2
 kappa = 8*np.pi*cst.G/c2**2
 k = 1.475*10**(-3)*(cst.fermi**3/(cst.eV*10**6))**(2/3)*c2**(5/3)
@@ -29,101 +27,134 @@ def RhoEQS(P):
     return (P/k)**(3/5)
 
 # def v_sound_c(rho):
-def v_sound_c(Phi, P):
+def v_sound_c(P):
     return np.sqrt(5/3 * k * RhoEQS(P)**(2/3)) / cst.c
 
-#Lagrangian
-def Lagrangian(P):
-    rho = RhoEQS(P)
-    return -c2*rho
 
 #Equation for b
 def b(r, m):
     return (1-(c2*m*kappa/(4*np.pi*r)))**(-1)
 
 #Equation for da/dr
-def adota(r, P, m, Psi, Phi):
+def adota(r, P, m, Psi, Phi, w):
     A = (b(r, m)/r)
-    B = (1-(1/b(r, m))+P*kappa*r**2*Phi**(-1/2)-2*r*Psi/(b(r,m)*Phi))
+    B = (1-(1/b(r, m))+P*kappa*r**2*Phi**(-1)-2*r*Psi/(b(r,m)*Phi) + ( -H00(r,m,Psi, Phi, w) ))
     C = (1+r*Psi/(2*Phi))**(-1)
     return A*B*C
 
 #Equation for D00
-def D00(r, P, m, Psi, Phi):
-    ADOTA = adota(r, P, m, Psi, Phi)
+def D00(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi, w)
     rho = RhoEQS(P)
-    Lm = Lagrangian(P)
     T = -c2*rho + 3*P
     A = Psi*ADOTA/(2*Phi*b(r,m))
-    B = kappa*(Lm-T)/(3*Phi**(1/2))
+    B = -kappa*(T)/(Phi * (3+2*w))
     return A+B
 
+def H00(r,m,Psi, Phi, w):
+    A = - w * Psi**2/Phi**2 * 1/(2*b(r,m))
+    return A
+
 #Equation for db/dr
-def bdotb(r, P, m, Psi, Phi):
+def bdotb(r, P, m, Psi, Phi, w):
     rho = RhoEQS(P)
     A = -b(r,m)/r
     B = 1/r
-    C = b(r,m)*r*(-D00(r, P, m, Psi, Phi)+kappa*c2*rho*Phi**(-1/2))
+    C = b(r,m)*r*(-H00(r,m,Psi, Phi, w)-D00(r, P, m, Psi, Phi, w)+kappa*c2*rho*Phi**(-1))
     return A+B+C
 
 #Equation for dP/dr
-def f1(r, P, m, Psi, Phi):
-    ADOTA = adota(r, P, m, Psi, Phi)
-    Lm = Lagrangian(P)
+def f1(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi, w)
     rho = RhoEQS(P)
-    return -(ADOTA/2)*(P+rho*c2)+(Psi/(2*Phi))*(Lm-P)
+    return -(ADOTA/2)*(P+rho*c2)
 
 #Equation for dm/dr
-def f2(r, P, m, Psi, Phi):
+def f2(r, P, m, Psi, Phi, w):
     rho = RhoEQS(P)
-    A = 4*np.pi*rho*(Phi**(-1/2))*r**2
-    B = 4*np.pi*(-D00(r, P, m, Psi, Phi)/(kappa*c2))*r**2
+    A = 4*np.pi*rho*(Phi**(-1))*r**2
+    B = 4*np.pi*(-D00(r, P, m, Psi, Phi,w)/(kappa*c2))*r**2
+    C = 4*np.pi*(-H00(r, m, Psi, Phi, w)/(kappa*c2))*r**2
     return A+B
 
 #Equation for dPsi/dr
-def f4(r, P, m, Psi, Phi, dilaton_active):
-    ADOTA = adota(r, P, m, Psi, Phi)
-    BDOTB = bdotb(r, P, m, Psi, Phi)
+def f4(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi,w)
+    BDOTB = bdotb(r, P, m, Psi, Phi,w)
     rho = RhoEQS(P)
-    Lm = Lagrangian(P)
     T = -c2*rho + 3*P
     A = (-Psi/2)*(ADOTA-BDOTB+4/r)
-    B = b(r,m)*kappa*Phi**(1/2)*(T-Lm)/3
-    if dilaton_active:
-        return A+B
-    else:
-        return 0
+    B = b(r,m)*kappa*T/(3+2*w)
+    return A+B
 
 #Equation for dPhi/dr
-def f3(r, P, m, Psi, Phi, dilaton_active):
-    if dilaton_active:
-        return Psi
-    else:
-        return 0
+def f3(r, P, m, Psi, Phi):
+    return Psi
+
 
 #Define for dy/dr
-def dy_dr(r, y, dilaton_active):
+def dy_dr(r, y, w):
     P, M, Phi, Psi = y
-    dy_dt = [f1(r, P, M, Psi, Phi), f2(r, P, M, Psi, Phi),f3(r, P, M, Psi, Phi, dilaton_active),f4(r, P, M, Psi, Phi, dilaton_active) ]
+    dy_dt = [f1(r, P, M, Psi, Phi, w), f2(r, P, M, Psi, Phi, w),f3(r, P, M, Psi, Phi),f4(r, P, M, Psi, Phi, w) ]
     return dy_dt
 
 #Define for dy/dr out of the star
-def dy_dr_out(r, y, P, dilaton_active):
+def dy_dr_out(r, y, P, w):
     M, Phi, Psi = y
-    dy_dt = [f2(r, P, M, Psi, Phi),f3(r, P, M, Psi, Phi, dilaton_active),f4(r, P, M, Psi, Phi, dilaton_active) ]
+    dy_dt = [f2(r, P, M, Psi, Phi, w),f3(r, P, M, Psi, Phi),f4(r, P, M, Psi, Phi, w) ]
     return dy_dt
+
+####################
+# inverted equation
+
+
+#Equation for dP/dr
+def drdp(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi, w)
+    rho = RhoEQS(P)
+    return (-(ADOTA/2)*(P+rho*c2))**-1
+
+#Equation for dm/dP
+def dmdp(r, P, m, Psi, Phi, w):
+    rho = RhoEQS(P)
+    A = 4*np.pi*rho*(Phi**(-1))*r**2
+    B = 4*np.pi*(-D00(r, P, m, Psi, Phi,w)/(kappa*c2))*r**2
+    C = 4*np.pi*(-H00(r, m, Psi, Phi, w)/(kappa*c2))*r**2
+    return (A+B)*drdp(r, P, m, Psi, Phi, w)
+
+#Equation for dPsi/dP
+def dpsidp(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi,w)
+    BDOTB = bdotb(r, P, m, Psi, Phi,w)
+    rho = RhoEQS(P)
+    T = -c2*rho + 3*P
+    A = (-Psi/2)*(ADOTA-BDOTB+4/r)
+    B = b(r,m)*kappa*T/(3+2*w)
+    return (A+B)*drdp(r, P, m, Psi, Phi, w)
+
+#Equation for dPhi/dP
+def dphidp(r, P, m, Psi, Phi, w):
+    return Psi*drdp(r, P, m, Psi, Phi, w)
+
+
+#Define for dy/dr
+def dydp(P, y, w):
+    r, M, Phi, Psi = y
+    dy_dt = [drdp(r, P, M, Psi, Phi, w), dmdp(r, P, M, Psi, Phi, w),dphidp(r, P, M, Psi, Phi, w),dpsidp(r, P, M, Psi, Phi, w) ]
+    return dy_dt
+
 
 class TOV():
 
-    def __init__(self, initDensity, initPsi, initPhi, radiusMax_in, radiusMax_out, Npoint, dilaton_active, log_active):
+    def __init__(self, initDensity, initPsi, initPhi, radiusMax_in, radiusMax_out, Npoint, log_active, w):
 #Init value
         self.initDensity = initDensity
         self.initPressure = PEQS(initDensity)
         self.initPsi = initPsi
         self.initPhi = initPhi
         self.initMass = 0
-        self.dilaton_active = dilaton_active
         self.log_active = log_active
+        self.w = w
 
 #Computation variable
         self.radiusMax_in = radiusMax_in
@@ -149,7 +180,30 @@ class TOV():
         self.r_ext = 0
         self.phi_inf = 0
         self.R = 0
-        self.Lm = 0
+
+    def finding_pressure_vanishes(self):
+
+        y0 = [self.Radius_Last, self.Mass_Last, self.Phi_Last, self.Psi_Last]
+        pressure_min = 10**(-50)
+        pressure = np.linspace(self.pressure_Last, pressure_min, 3000)
+        sol = solve_ivp(dydp, [self.pressure_Last, pressure_min], y0, method='RK45', t_eval=pressure, args=(self.w,))
+
+
+        self.pressure = sol.t[:-2]
+        self.radius = sol.y[0][:-2]
+        self.mass = sol.y[1][:-2]
+        self.Phi = sol.y[2][:-2]
+        self.Psi = sol.y[3][:-2]
+        self.density = (self.pressure/k)**(3/5)
+
+        self.pressureStar = sol.t[-1]
+        self.radiusStar = sol.y[0][-1]
+        self.massStar = sol.y[1][-1]
+        self.PhiStar = sol.y[2][-1]
+        self.PsiStar = sol.y[3][-1]
+        self.densityStar = (self.pressureStar/k)**(3/5)
+
+        return self.density, self.radius, self.mass, self.Phi, self.Psi, self.pressure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar
 
     def Compute(self):
         if self.log_active:
@@ -171,29 +225,37 @@ class TOV():
         if self.log_active:
             print('radius min ',r_min)
             print('radius max ',self.radiusMax_in)
-        sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45',t_eval=r ,args=(self.dilaton_active,))
-        # condition for Pressure = 0
-        '''
-        self.g_rr = b(sol.t, sol.y[1])
-        a_dot_a = adota(sol.t, sol.y[0], sol.y[1], sol.y[3], sol.y[2])
-        self.g_tt = np.exp(np.concatenate([[0.0], integcum(a_dot_a,sol.t)])-integ(a_dot_a,sol.t))
-        plt.plot(self.g_tt/self.g_rr)
-        plt.show()
-        '''
-        if sol.t[-1]<self.radiusMax_in:
-            self.pressure = sol.y[0][0:-2]
-            print('pressure', self.pressure)
-            print('density', (self.pressure/k)**(3/5))
-            self.mass = sol.y[1][0:-2]
-            self.Phi = sol.y[2][0:-2]
-            self.v_c = v_sound_c(self.Phi, self.pressure)
-            self.Psi = sol.y[3][0:-2]
-            self.radius = sol.t[0:-2]
-            # Value at the radius of star
-            self.massStar = sol.y[1][-1]
-            self.radiusStar = sol.t[-1]
-            self.pressureStar = sol.y[0][-1]
-            self.phiStar = sol.y[2][-1]
+        sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45',t_eval=r ,args=(self.w,))
+
+        self.Radius_frst = sol.t[:]
+        self.pressure_frst = sol.y[0][:]
+        self.density_frst = (self.pressure_frst/k)**(3/5)
+        self.Mass_frst = sol.y[1][:]
+        self.Phi_frst = sol.y[2][:]
+        self.Psi_frst = sol.y[3][:]
+
+        self.Radius_Last = sol.t[-1]
+        self.pressure_Last = sol.y[0][-1]
+        self.density_Last = (self.pressure_Last/k)**(3/5)
+        self.Mass_Last = sol.y[1][-1]
+        self.Phi_Last = sol.y[2][-1]
+        self.Psi_Last = sol.y[3][-1]
+
+
+        #Functions that compute the second integral in order to find lowest pressure
+        self.density, self.radius, self.mass, self.Phi, self.Psi, self.presure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar = self.finding_pressure_vanishes()
+
+#############
+#here we concatenate values from previous integration to new ones
+        if self.radiusStar<self.radiusMax_in:
+            self.radius = np.concatenate([self.Radius_frst, self.radius])
+            self.density = np.concatenate([self.density_frst, self.density])
+            self.mass = np.concatenate([self.Mass_frst, self.mass])
+            self.Phi = np.concatenate([self.Phi_frst, self.Phi])
+            self.Psi = np.concatenate([self.Psi_frst, self.Psi])
+            self.pressure = np.concatenate([self.pressure_frst, self.pressure])
+            self.v_c = v_sound_c(self.initPressure)
+#############
             n_star = len(self.radius)
             if self.log_active:
                 print('Star radius: ', self.radiusStar/1000, ' km')
@@ -210,7 +272,7 @@ class TOV():
             if self.log_active:
                 print('radius min ',self.radiusStar)
                 print('radius max ',self.radiusMax_out)
-            sol = solve_ivp(dy_dr_out, [r[0], self.radiusMax_out], y0,method='DOP853', t_eval=r, args=(0,self.dilaton_active))
+            sol = solve_ivp(dy_dr_out, [r[0], self.radiusMax_out], y0,method='DOP853', t_eval=r, args=(0,self.w))
             self.pressure = np.concatenate([self.pressure, np.zeros(self.Npoint)])
             self.mass = np.concatenate([self.mass, sol.y[0]])
             self.Phi = np.concatenate([self.Phi, sol.y[1]])
@@ -224,8 +286,8 @@ class TOV():
                 print('Phi at infinity ', self.phi_inf)
             # Compute metrics
             self.g_rr = b(self.radius, self.mass)
-            a_dot_a = adota(self.radius, self.pressure, self.mass, self.Psi, self.Phi)
-            b_dot_b = bdotb(self.radius, self.pressure, self.mass, self.Psi, self.Phi)
+            a_dot_a = adota(self.radius, self.pressure, self.mass, self.Psi, self.Phi, self.w)
+            b_dot_b = bdotb(self.radius, self.pressure, self.mass, self.Psi, self.Phi, self.w)
             self.g_tt = np.exp(np.concatenate([[0.0], integcum(a_dot_a,self.radius)])-integ(a_dot_a,self.radius))
             #compute Ricci scalar
             a_dot = a_dot_a*self.g_tt
@@ -235,7 +297,6 @@ class TOV():
             r = self.radius[0:-2]
             a_dot_a = a_dot_a[0:-2]
             b_dot_b = b_dot_b[0:-2]
-            R = -(2/B)*(a_2dot/(2*A)-0.5*a_dot_a**2+0.5*(0.5*a_dot_a+2/r)*(a_dot_a-b_dot_b)+(1-B)/(r**2))
             self.massADM = self.mass[-1]
             self.g_tt_ext = np.array(self.g_tt[n_star:-1])
             self.g_rr_ext = np.array(self.g_rr[n_star:-1])
@@ -247,30 +308,28 @@ class TOV():
                 print('END')
                 print('===========================================================\n')
 
-            print('RADIUS ETOILE',((self.pressure[0:len(radiusetoile)])/k)**(3/5))
+####################
 
-            E_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)])/k)**(3/5) *c2) * np.sqrt(self.Phi[0:len(radiusetoile)]) , radiusetoile )
-            print('E_int', E_int)
-            P_int = kappa/3 * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)] * np.sqrt(self.Phi[0:len(radiusetoile)]), radiusetoile)
-            theta = 3 * P_int/E_int
-            gamma_theta = (1+ theta*(2) + 1/2)/(2 + theta*(1)-1/2)
+            E_int = 4 * cst.pi * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * (((self.pressure[0:len(radiusetoile)])/k)**(3/5) *c2), radiusetoile )
+            P_int = 4 * cst.pi * simps(radiusetoile**2 * np.sqrt( self.g_tt[0:len(radiusetoile)] * self.g_rr[0:len(radiusetoile)] ) * self.pressure[0:len(radiusetoile)], radiusetoile)
+            theta = (3 * P_int)/E_int
+            # print( 'THETA', theta)
+            Xi = 1/(np.sqrt(3+2*self.w)) * ((1-theta)/(1+theta))
+            gamma_bd = (1+self.w) /(2+self.w)
+            gamma_theta = (np.sqrt(3+2*self.w) - Xi)/(np.sqrt(3+2*self.w)+Xi)
             self.Ge_theta = gamma_theta
 
-            delta_theta = 4/3 * (gamma_theta**2 - 1/4 * ((3+2*theta)/((9*(1+theta)**2) + 3 * theta**2)**(1/2) )**(-2))
+            delta_theta = 4/3 * (gamma_theta**2 - ((3+2*self.w)*(1+Xi**2))/(4 *( np.sqrt(3+2*self.w) + Xi)**2))
 
             self.Delta_theta = delta_theta
 
+##################
         else:
             print('Pressure=0 not reached')
 
-
-    def ComputeTOV(self):
-        """
-        ComputeTOV is the function to consider in order to compute "physical" quantities. It takes into account phi_inf->1 r->ininity
-        """
+    def ComputeTOV_normalization(self):
         self.Compute()
         self.initPhi = self.initPhi/self.phi_inf
         self.Compute()
-
 
 
