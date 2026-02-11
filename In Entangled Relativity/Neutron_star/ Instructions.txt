@@ -1,0 +1,14 @@
+This code aims to compute the value of Post-Newtonian parameters gamma and delta of neutron stars in Entangled Relativity theory by solving the modified TOV equations.
+
+To launch the code, download everything from the GitHub repository. Then, you need to install the packages listed in the requirements.txt file.
+
+Then, in a terminal run :
+
+" python3 Get_all_figures.py " 
+
+This command will execute the code and generate 4 figures.
+- Plot of 1-gamma exact for 300 different values of central densities
+- Plot of 1-delta exact for 300 different values of central densities
+- Plot of the variation in orbital period dotP.
+
+These are the figures 5,6 and 7 of the paper. The code runs in 10-15 minutes.

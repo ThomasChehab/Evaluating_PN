@@ -1,0 +1,9 @@
+This code aims to compute the constant trhoughout the integration to check its validity in Entangled Relativity.
+
+To launch the code, download everything from the GitHub repository. Then, you need to install the packages listed in the requirements.txt file.
+
+Then, in a terminal run :
+
+" python3 main_FI2.py " 
+
+This command will execute the code and generate 1 figure that shows the relative variation of C, which is figure 8 of the paper.
