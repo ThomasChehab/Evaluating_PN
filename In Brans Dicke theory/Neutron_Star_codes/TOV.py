@@ -27,7 +27,7 @@ def RhoEQS(P):
     return (P/k)**(3/5)
 
 # def v_sound_c(rho):
-def v_sound_c(Phi, P):
+def v_sound_c(P):
     return np.sqrt(5/3 * k * RhoEQS(P)**(2/3)) / cst.c
 
 
@@ -104,6 +104,46 @@ def dy_dr_out(r, y, P, w):
     dy_dt = [f2(r, P, M, Psi, Phi, w),f3(r, P, M, Psi, Phi),f4(r, P, M, Psi, Phi, w) ]
     return dy_dt
 
+####################
+# inverted equation
+
+
+#Equation for dP/dr
+def drdp(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi, w)
+    rho = RhoEQS(P)
+    return (-(ADOTA/2)*(P+rho*c2))**-1
+
+#Equation for dm/dP
+def dmdp(r, P, m, Psi, Phi, w):
+    rho = RhoEQS(P)
+    A = 4*np.pi*rho*(Phi**(-1))*r**2
+    B = 4*np.pi*(-D00(r, P, m, Psi, Phi,w)/(kappa*c2))*r**2
+    C = 4*np.pi*(-H00(r, m, Psi, Phi, w)/(kappa*c2))*r**2
+    return (A+B)*drdp(r, P, m, Psi, Phi, w)
+
+#Equation for dPsi/dP
+def dpsidp(r, P, m, Psi, Phi, w):
+    ADOTA = adota(r, P, m, Psi, Phi,w)
+    BDOTB = bdotb(r, P, m, Psi, Phi,w)
+    rho = RhoEQS(P)
+    T = -c2*rho + 3*P
+    A = (-Psi/2)*(ADOTA-BDOTB+4/r)
+    B = b(r,m)*kappa*T/(3+2*w)
+    return (A+B)*drdp(r, P, m, Psi, Phi, w)
+
+#Equation for dPhi/dP
+def dphidp(r, P, m, Psi, Phi, w):
+    return Psi*drdp(r, P, m, Psi, Phi, w)
+
+
+#Define for dy/dr
+def dydp(P, y, w):
+    r, M, Phi, Psi = y
+    dy_dt = [drdp(r, P, M, Psi, Phi, w), dmdp(r, P, M, Psi, Phi, w),dphidp(r, P, M, Psi, Phi, w),dpsidp(r, P, M, Psi, Phi, w) ]
+    return dy_dt
+
+
 class TOV():
 
     def __init__(self, initDensity, initPsi, initPhi, radiusMax_in, radiusMax_out, Npoint, log_active, w):
@@ -141,6 +181,30 @@ class TOV():
         self.phi_inf = 0
         self.R = 0
 
+    def finding_pressure_vanishes(self):
+
+        y0 = [self.Radius_Last, self.Mass_Last, self.Phi_Last, self.Psi_Last]
+        pressure_min = 10**(-50)
+        pressure = np.linspace(self.pressure_Last, pressure_min, 3000)
+        sol = solve_ivp(dydp, [self.pressure_Last, pressure_min], y0, method='RK45', t_eval=pressure, args=(self.w,))
+
+
+        self.pressure = sol.t[:-2]
+        self.radius = sol.y[0][:-2]
+        self.mass = sol.y[1][:-2]
+        self.Phi = sol.y[2][:-2]
+        self.Psi = sol.y[3][:-2]
+        self.density = (self.pressure/k)**(3/5)
+
+        self.pressureStar = sol.t[-1]
+        self.radiusStar = sol.y[0][-1]
+        self.massStar = sol.y[1][-1]
+        self.PhiStar = sol.y[2][-1]
+        self.PsiStar = sol.y[3][-1]
+        self.densityStar = (self.pressureStar/k)**(3/5)
+
+        return self.density, self.radius, self.mass, self.Phi, self.Psi, self.pressure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar
+
     def Compute(self):
         if self.log_active:
             print('===========================================================')
@@ -162,18 +226,36 @@ class TOV():
             print('radius min ',r_min)
             print('radius max ',self.radiusMax_in)
         sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45',t_eval=r ,args=(self.w,))
-        if sol.t[-1]<self.radiusMax_in:
-            self.pressure = sol.y[0][0:-2]
-            self.mass = sol.y[1][0:-2]
-            self.Phi = sol.y[2][0:-2]
-            self.v_c = v_sound_c(self.Phi, self.pressure)
-            self.Psi = sol.y[3][0:-2]
-            self.radius = sol.t[0:-2]
-            # Value at the radius of star
-            self.massStar = sol.y[1][-1]
-            self.radiusStar = sol.t[-1]
-            self.pressureStar = sol.y[0][-1]
-            self.phiStar = sol.y[2][-1]
+
+        self.Radius_frst = sol.t[:]
+        self.pressure_frst = sol.y[0][:]
+        self.density_frst = (self.pressure_frst/k)**(3/5)
+        self.Mass_frst = sol.y[1][:]
+        self.Phi_frst = sol.y[2][:]
+        self.Psi_frst = sol.y[3][:]
+
+        self.Radius_Last = sol.t[-1]
+        self.pressure_Last = sol.y[0][-1]
+        self.density_Last = (self.pressure_Last/k)**(3/5)
+        self.Mass_Last = sol.y[1][-1]
+        self.Phi_Last = sol.y[2][-1]
+        self.Psi_Last = sol.y[3][-1]
+
+
+        #Functions that compute the second integral in order to find lowest pressure
+        self.density, self.radius, self.mass, self.Phi, self.Psi, self.presure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar = self.finding_pressure_vanishes()
+
+#############
+#here we concatenate values from previous integration to new ones
+        if self.radiusStar<self.radiusMax_in:
+            self.radius = np.concatenate([self.Radius_frst, self.radius])
+            self.density = np.concatenate([self.density_frst, self.density])
+            self.mass = np.concatenate([self.Mass_frst, self.mass])
+            self.Phi = np.concatenate([self.Phi_frst, self.Phi])
+            self.Psi = np.concatenate([self.Psi_frst, self.Psi])
+            self.pressure = np.concatenate([self.pressure_frst, self.pressure])
+            self.v_c = v_sound_c(self.initPressure)
+#############
             n_star = len(self.radius)
             if self.log_active:
                 print('Star radius: ', self.radiusStar/1000, ' km')
