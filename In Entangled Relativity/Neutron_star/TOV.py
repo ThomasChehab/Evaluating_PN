@@ -18,6 +18,7 @@ c2 = cst.c**2
 kappa = 8*np.pi*cst.G/c2**2
 massSun = 1.989*10**30
 
+#condition to stop first integral in case P<0
 def stop_condition(t, y, a, b, c):
     return y[0]
 
@@ -118,8 +119,8 @@ def dy_dr_out(r, y, rho, option, dilaton_active, option_eqs):
     dy_dt = [f2(r, rho, M, Psi, Phi, option, option_eqs),f3(r, rho, M, Psi, Phi, option, dilaton_active),f4(r, rho, M, Psi, Phi, option, dilaton_active, option_eqs) ]
     return dy_dt
 
-#######################################""
-#Equations in order to compute the second integral with P as the radial variable
+#######################################
+#Equations in order to compute the second integral with rho as the radial variable
 
 #Equation for dr/drho
 def drdrho(r, rho, m, Psi, Phi, option, option_eqs):
@@ -172,24 +173,29 @@ def dy_drho(rho, y, option, dilaton_active, option_eqs):
     dy_dt = [drdrho(r, rho, M, Psi, Phi, option, option_eqs), dmdrho(r, rho, M, Psi, Phi, option, option_eqs),dphidrho(r, rho, M, Psi, Phi, option, dilaton_active, option_eqs),dPsidrho(r, rho, M, Psi, Phi, option, dilaton_active, option_eqs) ]
     return dy_dt
 
-#performing a change of variable such that x = ln(rho)
-#easier to integrate
+#Performing a change of variable such that x = ln(rho)
+#Easier to integrate
+#Equation for dr/dx
 def drdx(x, r, m, Psi, Phi, option, option_eqs):
     rho = np.exp(x)
     return rho * drdrho(r, rho, m, Psi, Phi, option, option_eqs)
 
+#Equation for dm/dx
 def dmdx(x, r, m, Psi, Phi, option, option_eqs):
     rho = np.exp(x)
     return rho * dmdrho(r, rho, m, Psi, Phi, option, option_eqs)
 
+#Equation for dPhi/dx
 def dPhidx(x, r, m, Psi, Phi, option, dilaton_active, option_eqs):
     rho = np.exp(x)
     return rho * dphidrho(r, rho, m, Psi, Phi, option, dilaton_active, option_eqs)
 
+#Equation for dPsi/dx
 def dPsidx(x, r, m, Psi, Phi, option, dilaton_active, option_eqs):
     rho = np.exp(x)
     return rho * dPsidrho(r, rho, m, Psi, Phi,option, dilaton_active, option_eqs)
 
+#System of equation for dy/dx
 def dy_dx(x, y, option, dilaton_active, option_eqs):
     r, M, Phi, Psi = y
     return [drdx(x, r, M, Psi, Phi, option, option_eqs), dmdx(x, r, M, Psi, Phi, option, option_eqs), dPhidx(x, r, M, Psi, Phi, option, dilaton_active, option_eqs), dPsidx(x, r, M, Psi, Phi, option, dilaton_active, option_eqs)]
@@ -258,9 +264,11 @@ class TOV():
         self.r_in = 0
         self.phi_inf = 0
 
+#function that compute the second integration, to find rho = 0
     def finding_pressure_vanishes(self):
 
         #initial values for integration
+        #Last values are last values of previous integration
         y0 = [self.Radius_Last, self.Mass_Last, self.Phi_Last, self.Psi_Last]
         #minimal density value
         density_min = 10**(-10)
@@ -272,15 +280,7 @@ class TOV():
         #linspace of values of x for integration
         x_eval = np.linspace(x0, xmin, self.Npoint)
         #integrating differential equation with variable x
-        sol = solve_ivp(
-            dy_dx,
-            [x0, xmin],
-            y0,
-            t_eval=x_eval,
-            method='RK45',
-            args=(self.option, self.dilaton_active, self.option_eqs)
-        )
-
+        sol = solve_ivp(dy_dx,[x0, xmin],y0, t_eval=x_eval,method='RK45',args=(self.option, self.dilaton_active, self.option_eqs))
         density = np.exp(sol.t) # recovering density from x = ln(rho)
 
         # recovering different parameter
@@ -291,13 +291,14 @@ class TOV():
         self.Psi = sol.y[3][:-2]
         self.pressure = k * (self.density)**(5/3)
 
+        #star's parameter
         self.densityStar = sol.t[-1]
         self.radiusStar = sol.y[0][-1]
         self.massStar = sol.y[1][-1]
         self.PhiStar = sol.y[2][-1]
         self.PsiStar = sol.y[3][-1]
         self.pressureStar = k * self.densityStar**(5/3)
-
+        #function return all variable and star's variable
         return self.density, self.radius, self.mass, self.Phi, self.Psi, self.pressure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar
 
     def Compute(self):
@@ -312,27 +313,32 @@ class TOV():
             print('Initial psi: ', self.initPsi)
             print('Number of points: ', self.Npoint)
             print('Radius max: ', self.radiusMax_in/1000, ' km')
+        #initial values for integration
         y0 = [self.initDensity,self.initMass,self.initPhi,self.initPsi]
         if self.log_active:
             print('y0 = ', y0,'\n')
-        r_min = 10**(-15) # if too low, bugs appears in the plots
+        #minimal radius for starting integration
+        r_min = 10**(-15) # if not low, bugs appears in the plots
+        #range of r values for integration
         r = np.linspace(r_min,self.radiusMax_in,self.Npoint)
         if self.log_active:
             print('radius min ',r_min)
             print('radius max ',self.radiusMax_in)
+        #stop condition for the first integral
         stop_condition.terminal = True
         stop_condition.direction = -1
+        #first integration with r as the radial variable
         sol = solve_ivp(dy_dr, [r_min, self.radiusMax_in], y0, method='RK45', t_eval=r, events = stop_condition, args=(self.option,self.dilaton_active, self.option_eqs))
 
 
-
+        #parameter from first integral
         self.Radius_frst = sol.t[:]
         self.density_frst = sol.y[0][:]
         self.pressure_frst = k * (self.density_frst)**(5/3)
         self.Mass_frst = sol.y[1][:]
         self.Phi_frst = sol.y[2][:]
         self.Psi_frst = sol.y[3][:]
-
+        #last values returned by first integral
         self.Radius_Last = sol.t[-1]
         self.density_Last = sol.y[0][-1]
         self.pressure_Last = k * (self.density_Last)**(5/3)
@@ -344,8 +350,7 @@ class TOV():
         #Functions that compute the second integral in order to find lowest pressure
         self.density, self.radius, self.mass, self.Phi, self.Psi, self.presure, self.densityStar, self.radiusStar, self.massStar, self.PhiStar, self.PsiStar, self.pressureStar = self.finding_pressure_vanishes()
 
-#############
-#here we concatenate values from previous integration to new ones
+#here we concatenate values from previous integration to new ones to obtain the full set
         if self.radiusStar<self.radiusMax_in:
             self.radius = np.concatenate([self.Radius_frst, self.radius])
             self.density = np.concatenate([self.density_frst, self.density])
@@ -353,8 +358,8 @@ class TOV():
             self.Phi = np.concatenate([self.Phi_frst, self.Phi])
             self.Psi = np.concatenate([self.Psi_frst, self.Psi])
             self.pressure = np.concatenate([self.pressure_frst, self.pressure])
+            #recovering the maximal speed of sound in the star (reached in the core where density is maximal)
             self.v_c = v_sound_c(self.option_eqs, self.initDensity)
-#############
             n_star = len(self.radius)
             if self.log_active:
                 print('Star radius: ', self.radiusStar/1000, ' km')
@@ -365,14 +370,18 @@ class TOV():
                 print('===========================================================')
                 print('SOLVER OUTSIDE THE STAR')
                 print('===========================================================\n')
-            y0 = [self.massStar, sol.y[2][-1],sol.y[3][-1]]
+            #initial data for integration
+            y0 = [self.massStar, self.PhiStar,self.PsiStar]
             if self.log_active:
                 print('y0 = ', y0,'\n')
+            #preparing integration in vacuum far from the source so taking a logspace
             r = np.logspace(np.log(self.radiusStar)/np.log(10),np.log(self.radiusMax_out)/np.log(10),self.Npoint)
             if self.log_active:
                 print('radius min ',self.radiusStar)
                 print('radius max ',self.radiusMax_out)
+            #integration out of the star, in the vacuum limit
             sol = solve_ivp(dy_dr_out, [r[0], self.radiusMax_out], y0,method='DOP853', t_eval=r, args=(0,self.option,self.dilaton_active, self.option_eqs))
+            #concatenation of previous results and new from integration out of the star
             self.density = np.concatenate([self.density, np.zeros(self.Npoint)])
             self.mass = np.concatenate([self.mass, sol.y[0]])
             self.Phi = np.concatenate([self.Phi, sol.y[1]])
@@ -399,15 +408,16 @@ class TOV():
 
             #computation of exact parameter using TOV output data
             #Internal Energy density computation
+            #See Eq(76-77) of << On the numerical evaluation of the ‘exact’ Post-Newtonian parameters in Brans-Dickeand Entangled Relativity theories >>
             E_int = kappa/3 * simps(radius_in_star**2 * np.sqrt( self.g_tt[0:len(radius_in_star)] * self.g_rr[0:len(radius_in_star)] ) * (((self.density[0:len(radius_in_star)]))*c2) * np.sqrt(self.Phi[0:len(radius_in_star)]) , radius_in_star )
             #Internal pressure computation
             P_int = kappa/3 * simps(radius_in_star**2 * np.sqrt( self.g_tt[0:len(radius_in_star)] * self.g_rr[0:len(radius_in_star)] ) * self.density[0:len(radius_in_star)]**(5/3) * k * np.sqrt(self.Phi[0:len(radius_in_star)]), radius_in_star)
             #computing their ration
             theta = 3 * P_int/E_int
-            #computing exact parameter according to Eq.() of
+            #computing exact parameter according to Eq.(75) of << On the numerical evaluation of the ‘exact’ Post-Newtonian parameters in Brans-Dickeand Entangled Relativity theories >>
             gamma_theta = (1+ theta*(2) + 1/2)/(2 + theta*(1)-1/2)
             self.Ge_theta = gamma_theta
-            #computing exact parameter according to Eq.() of
+            #computing exact parameter according to Eq.(75) of << On the numerical evaluation of the ‘exact’ Post-Newtonian parameters in Brans-Dickeand Entangled Relativity theories >>
             delta_theta = 4/3 * (gamma_theta**2 - 1/4 * ((3+2*theta)/((9*(1+theta)**2) + 3 * theta**2)**(1/2) )**(-2))
             self.Delta_theta = delta_theta
         else:

@@ -15,13 +15,12 @@ from matplotlib.transforms import Bbox
 import mplhep as hep
 hep.style.use("ATLAS")
 
-# In[2]:
 
 # function that compute JNW parameter and hence gamma exact
 def run(rho_cen, EoS):
     PhiInit = 1 #definition of initial values
     PsiInit = 0
-    radiusMax_in = 40000 # maximal radius of the star
+    radiusMax_in = 40000 # maximal radius of the star 40km
     radiusMax_out = 10000000 # maximal radius outside the star
     Npoint = 1000000 #number of points
     log_active = False #True = print star's structure values
@@ -31,7 +30,7 @@ def run(rho_cen, EoS):
     #EoS = 1 # 0 = polytropic, 1 = SLy
     tov = TOV(rhoInit, PsiInit, PhiInit, radiusMax_in, radiusMax_out, Npoint,Lagrangian, dilaton_active, log_active, EoS)# introducing tov class
     tov.ComputeTOV() #Computing star's parameters
-    r = tov.radius #Recovering parameters
+    r = tov.radius #Recovering parameters from TOV code
     a = tov.g_tt
     b = tov.g_rr
     phi = tov.Phi
@@ -43,9 +42,9 @@ def run(rho_cen, EoS):
     f_a = -a_dot*r[1:-2]*r[1:-2]/1000
     f_b = -b_dot*r[1:-2]*r[1:-2]/1000
     f_phi = -phi_dot*r*r/1000
-    SoS_c_max = np.max(tov.v_c)#defining the speed of sound (should not exceed c/sqrt(3))
+    SoS_c_max = np.max(tov.v_c)#recovering speed of sound/c 0<v_s/c<1
     b_ = 1/(2*np.sqrt(3)) # Conformal factor
-    C = f_b[-1]/f_phi[-1]#parameter that tend to infinity
+    C = f_b[-1]/f_phi[-1]#parameter that tend to infinity cf Eq.(43-45) of << On the numerical evaluation of the ‘exact’ Post-Newtonian parameters in Brans-Dickeand Entangled Relativity theories >>
     #recovering gamma by solving the Second degree equation obtain by analytically solving C
     a1 = 1
     a2 = 4*b_*(C+1)
@@ -65,8 +64,8 @@ def run(rho_cen, EoS):
     period = 0.35479 * 24 * 3600 #per second
     n_b = 2*cst.pi/(period) # orbital frequency red/sec
     q = 8.1# mass ratio
-    e = 3.4 * 10**(-7)
-    Gstar = cst.G#/(np.exp(-2*phi[-1]/np.sqrt(3)) * (1+4/3)) # quel signe dans l'exp ?
+    e = 3.4 * 10**(-7) #eccentricity
+    Gstar = cst.G
 
     # mc = Mc/(1.989*10**30)
     T = cst.G * 1.989*10**30/cst.c**3 # solar gravitational constant of time
@@ -78,13 +77,13 @@ def run(rho_cen, EoS):
     return (gamma, ge_theta, delta_theta, gamma_dev_per, delta_dev_per, SoS_c_max, pdot, mass_ADM)
 
 
-# run(1578)
-
 #function that compute vectors and plot them. There are 2 different type depending in the two EoS studied (polytrope or SLy)
 def evaluate_pdot(n):
 
     nspace = n #number of iteration
     den_space = np.linspace(100,2000,num=n) #min max density
+
+    #defining arrays to store data from run() for the polytropic EoS
     beta_vec = np.array([])
     vsurc_a = np.array([])
     gamma_edd_a = np.array([])
@@ -93,7 +92,7 @@ def evaluate_pdot(n):
     delta_dev_per_a = np.array([])
     pdot_a = np.array([])
     mass_ADM_a = np.array([])
-
+    #defining arrays to store data from run() for the sly EoS
     beta_vec_SLy = np.array([])
     vsurc_a_SLy = np.array([])
     gamma_edd_a_SLy = np.array([])
@@ -116,6 +115,7 @@ def evaluate_pdot(n):
         mass_ADM_a = np.append(mass_ADM_a, mass_ADM)
 
     index_max = np.where(vsurc_a > 1/np.sqrt(3))[0][0] #imposing sound speed not to exceed c/sqrt(3)
+    #taking only values of the parameter that do not exceed speed of sound limit
     den_space = den_space[0:index_max]
     gamma_edd_a = gamma_edd_a[0:index_max]
     delta_edd_a = delta_edd_a[0:index_max]
@@ -162,6 +162,7 @@ def evaluate_pdot(n):
 
 
     index_max_SLy_c = np.where(vsurc_a_SLy > 1)[0][0] #imposing sound speed not to exceed c
+    #only taking values that do not exceed the speed limit
     vsurc_a_SLy_c = vsurc_a_SLy[0:index_max_SLy_c]
     pdot_a_SLy_c = pdot_a_SLy[0:index_max_SLy_c]
     mass_ADM_a_SLy_c = mass_ADM_a_SLy[0:index_max_SLy_c]
@@ -179,6 +180,7 @@ def evaluate_pdot(n):
 
     #imposing minimal value of 1 solar mass
     index_mass = np.where(mass_ADM_a > 1)[0][0]
+    #keeping only values that contains a mass > 1 solar mass
     mass_ADM_a = mass_ADM_a[index_mass:-1]
     gamma_edd_a = gamma_edd_a[index_mass:-1]
     delta_edd_a = delta_edd_a[index_mass:-1]

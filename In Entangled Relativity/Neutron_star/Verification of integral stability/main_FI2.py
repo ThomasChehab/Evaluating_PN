@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-main.py — Run the modified TOV (TOV_first_integral_check.py), report
-(M_star, R_star), and plot the first-integral "constant" C(r) inside the star.
-
-Place this file next to:
-  - TOV_first_integral_check.py
-then run:
-  python3 main.py
-"""
-
 import numpy as np
 import scipy.constants as cst
 import matplotlib.pyplot as plt
@@ -66,8 +55,7 @@ def run_case(init_density_kg_m3: float, option: int, name: str, radiusMax_in: fl
         radiusMax_in=radiusMax_in,
         Npoint=Npoint,
         option=option,
-        dilaton_active=True,
-    )
+        dilaton_active=True,)
     sol = tov.compute()
     r = sol.t
     P, M, Phi, Psi = sol.y
@@ -137,9 +125,6 @@ def main():
     c_in = []
     for res in results:
         c_in.append(res["C_in"])
-
-    print(len(c_in[0]))
-
 
     variation = []
     for i in range(len(c_in[0])):
